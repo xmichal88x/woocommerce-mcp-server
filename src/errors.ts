@@ -15,8 +15,8 @@ const HTTP_ERROR_MAP: Record<number, string> = {
 };
 
 export function safeError(error: unknown): SafeError {
-  if (error && typeof error === 'object' && 'response' in error) {
-    const axiosError = error as { response?: { status?: number }; message?: string };
+  if (error instanceof Error) {
+    const axiosError = error as { response?: { status?: number } };
     const status = axiosError.response?.status;
 
     if (status && HTTP_ERROR_MAP[status]) {
@@ -28,8 +28,8 @@ export function safeError(error: unknown): SafeError {
     }
 
     // Network errors (no response)
+    const msg = error.message || '';
     if (!axiosError.response) {
-      const msg = axiosError.message || '';
       if (msg.includes('ENOTFOUND') || msg.includes('ECONNREFUSED')) {
         return {
           code: 'NETWORK_ERROR',
@@ -45,6 +45,12 @@ export function safeError(error: unknown): SafeError {
         };
       }
     }
+
+    return {
+      code: 'UNKNOWN_ERROR',
+      message: msg,
+      actionable: false,
+    };
   }
 
   return {
