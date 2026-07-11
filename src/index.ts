@@ -7,6 +7,7 @@ import './tools/shipping.js';
 import './tools/taxes.js';
 import './tools/coupons.js';
 import './tools/customers.js';
+import './tools/email.js';
 import './tools/reports.js';
 import './tools/system.js';
 

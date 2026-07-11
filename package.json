@@ -16,10 +16,12 @@
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@woocommerce/woocommerce-rest-api": "^1.0.2",
     "dotenv": "^16.6.1",
+    "nodemailer": "^9.0.3",
     "zod": "^3.25.76"
   },
   "devDependencies": {
     "@types/node": "^20.19.43",
+    "@types/nodemailer": "^8.0.1",
     "eslint": "^9.39.5",
     "tsx": "^4.23.0",
     "typescript": "^5.9.3",
