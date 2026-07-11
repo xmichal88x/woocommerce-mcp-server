@@ -52,9 +52,9 @@ function createClient(): WooCommerceClient {
     timeout: config.timeout,
   };
 
-  return new (WooCommerceRestApi as unknown as new (
-    opt: IWooCommerceRestApiOptions,
-  ) => WooCommerceClient)(options);
+  return new (
+    WooCommerceRestApi as unknown as new (opt: IWooCommerceRestApiOptions) => WooCommerceClient
+  )(options);
 }
 
 export function getClient(): WooCommerceClient {

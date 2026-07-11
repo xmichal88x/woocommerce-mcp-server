@@ -1,7 +1,6 @@
 import { registerGroup } from '../groups.js';
 import { getClient, isReadOnly } from '../client.js';
 import { safeError } from '../errors.js';
-import { extractPagination } from '../types.js';
 
 function readOnlyError() {
   return {
