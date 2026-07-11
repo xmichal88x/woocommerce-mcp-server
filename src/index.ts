@@ -2,6 +2,7 @@ import { startServer } from './server.js';
 import { getConfig } from './config.js';
 import { safeError } from './errors.js';
 import './tools/products.js';
+import './tools/orders.js';
 
 try {
   getConfig();
