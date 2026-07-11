@@ -3,6 +3,9 @@ import { getConfig } from './config.js';
 import { safeError } from './errors.js';
 import './tools/products.js';
 import './tools/orders.js';
+import './tools/shipping.js';
+import './tools/taxes.js';
+import './tools/coupons.js';
 import './tools/customers.js';
 
 try {
