@@ -3,10 +3,40 @@ import type { IWooCommerceRestApiOptions } from '@woocommerce/woocommerce-rest-a
 import { getConfig } from './config.js';
 
 interface WooCommerceClient {
-  get(endpoint: string, params?: Record<string, unknown>): Promise<{ data: unknown; headers: Record<string, string | string[] | undefined>; status: number }>;
-  post(endpoint: string, data: Record<string, unknown>, params?: Record<string, unknown>): Promise<{ data: unknown; headers: Record<string, string | string[] | undefined>; status: number }>;
-  put(endpoint: string, data: Record<string, unknown>, params?: Record<string, unknown>): Promise<{ data: unknown; headers: Record<string, string | string[] | undefined>; status: number }>;
-  delete(endpoint: string, params?: Record<string, unknown>): Promise<{ data: unknown; headers: Record<string, string | string[] | undefined>; status: number }>;
+  get(
+    endpoint: string,
+    params?: Record<string, unknown>,
+  ): Promise<{
+    data: unknown;
+    headers: Record<string, string | string[] | undefined>;
+    status: number;
+  }>;
+  post(
+    endpoint: string,
+    data: Record<string, unknown>,
+    params?: Record<string, unknown>,
+  ): Promise<{
+    data: unknown;
+    headers: Record<string, string | string[] | undefined>;
+    status: number;
+  }>;
+  put(
+    endpoint: string,
+    data: Record<string, unknown>,
+    params?: Record<string, unknown>,
+  ): Promise<{
+    data: unknown;
+    headers: Record<string, string | string[] | undefined>;
+    status: number;
+  }>;
+  delete(
+    endpoint: string,
+    params?: Record<string, unknown>,
+  ): Promise<{
+    data: unknown;
+    headers: Record<string, string | string[] | undefined>;
+    status: number;
+  }>;
 }
 
 let client: WooCommerceClient | null = null;
@@ -23,7 +53,9 @@ function createClient(): WooCommerceClient {
     queryStringAuth: true,
   };
 
-  return new (WooCommerceRestApi as unknown as new (opt: IWooCommerceRestApiOptions) => WooCommerceClient)(options);
+  return new (
+    WooCommerceRestApi as unknown as new (opt: IWooCommerceRestApiOptions) => WooCommerceClient
+  )(options);
 }
 
 export function getClient(): WooCommerceClient {

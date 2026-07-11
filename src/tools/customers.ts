@@ -5,7 +5,20 @@ import { extractPagination } from '../types.js';
 
 function readOnlyError() {
   return {
-    content: [{ type: 'text' as const, text: JSON.stringify({ code: 'READ_ONLY', message: 'Server is in read-only mode. This operation is not allowed.', actionable: false }, null, 2) }],
+    content: [
+      {
+        type: 'text' as const,
+        text: JSON.stringify(
+          {
+            code: 'READ_ONLY',
+            message: 'Server is in read-only mode. This operation is not allowed.',
+            actionable: false,
+          },
+          null,
+          2,
+        ),
+      },
+    ],
     isError: true,
   };
 }
@@ -24,7 +37,11 @@ registerGroup({
           search: { type: 'string', description: 'Search term' },
           email: { type: 'string', description: 'Filter by email' },
           role: { type: 'string', description: 'Filter by role (e.g. all, customer)' },
-          orderby: { type: 'string', enum: ['id', 'email', 'name', 'username', 'role'], description: 'Sort field' },
+          orderby: {
+            type: 'string',
+            enum: ['id', 'email', 'name', 'username', 'role'],
+            description: 'Sort field',
+          },
           order: { type: 'string', enum: ['asc', 'desc'], description: 'Sort direction' },
         },
       },
@@ -34,9 +51,23 @@ registerGroup({
           const params: Record<string, unknown> = { ...args };
           const { data, headers } = await client.get('customers', params);
           const pagination = extractPagination(headers as Record<string, string | undefined>);
-          return { content: [{ type: 'text', text: JSON.stringify({ customers: data, total: pagination.total, totalPages: pagination.totalPages }, null, 2) }] };
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(
+                  { customers: data, total: pagination.total, totalPages: pagination.totalPages },
+                  null,
+                  2,
+                ),
+              },
+            ],
+          };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -56,7 +87,10 @@ registerGroup({
           const { data } = await client.get(`customers/${args.id}`, {});
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -74,11 +108,16 @@ registerGroup({
           billing: {
             type: 'object',
             properties: {
-              first_name: { type: 'string' }, last_name: { type: 'string' },
-              company: { type: 'string' }, address_1: { type: 'string' },
-              address_2: { type: 'string' }, city: { type: 'string' },
-              state: { type: 'string' }, postcode: { type: 'string' },
-              country: { type: 'string' }, email: { type: 'string' },
+              first_name: { type: 'string' },
+              last_name: { type: 'string' },
+              company: { type: 'string' },
+              address_1: { type: 'string' },
+              address_2: { type: 'string' },
+              city: { type: 'string' },
+              state: { type: 'string' },
+              postcode: { type: 'string' },
+              country: { type: 'string' },
+              email: { type: 'string' },
               phone: { type: 'string' },
             },
             description: 'Billing address',
@@ -86,15 +125,23 @@ registerGroup({
           shipping: {
             type: 'object',
             properties: {
-              first_name: { type: 'string' }, last_name: { type: 'string' },
-              company: { type: 'string' }, address_1: { type: 'string' },
-              address_2: { type: 'string' }, city: { type: 'string' },
-              state: { type: 'string' }, postcode: { type: 'string' },
+              first_name: { type: 'string' },
+              last_name: { type: 'string' },
+              company: { type: 'string' },
+              address_1: { type: 'string' },
+              address_2: { type: 'string' },
+              city: { type: 'string' },
+              state: { type: 'string' },
+              postcode: { type: 'string' },
               country: { type: 'string' },
             },
             description: 'Shipping address',
           },
-          meta_data: { type: 'array', items: { type: 'object', properties: { key: { type: 'string' }, value: {} } }, description: 'Meta data' },
+          meta_data: {
+            type: 'array',
+            items: { type: 'object', properties: { key: { type: 'string' }, value: {} } },
+            description: 'Meta data',
+          },
         },
         required: ['email'],
       },
@@ -105,7 +152,10 @@ registerGroup({
           const { data } = await client.post('customers', args);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -124,11 +174,16 @@ registerGroup({
           billing: {
             type: 'object',
             properties: {
-              first_name: { type: 'string' }, last_name: { type: 'string' },
-              company: { type: 'string' }, address_1: { type: 'string' },
-              address_2: { type: 'string' }, city: { type: 'string' },
-              state: { type: 'string' }, postcode: { type: 'string' },
-              country: { type: 'string' }, email: { type: 'string' },
+              first_name: { type: 'string' },
+              last_name: { type: 'string' },
+              company: { type: 'string' },
+              address_1: { type: 'string' },
+              address_2: { type: 'string' },
+              city: { type: 'string' },
+              state: { type: 'string' },
+              postcode: { type: 'string' },
+              country: { type: 'string' },
+              email: { type: 'string' },
               phone: { type: 'string' },
             },
             description: 'Billing address',
@@ -136,15 +191,23 @@ registerGroup({
           shipping: {
             type: 'object',
             properties: {
-              first_name: { type: 'string' }, last_name: { type: 'string' },
-              company: { type: 'string' }, address_1: { type: 'string' },
-              address_2: { type: 'string' }, city: { type: 'string' },
-              state: { type: 'string' }, postcode: { type: 'string' },
+              first_name: { type: 'string' },
+              last_name: { type: 'string' },
+              company: { type: 'string' },
+              address_1: { type: 'string' },
+              address_2: { type: 'string' },
+              city: { type: 'string' },
+              state: { type: 'string' },
+              postcode: { type: 'string' },
               country: { type: 'string' },
             },
             description: 'Shipping address',
           },
-          meta_data: { type: 'array', items: { type: 'object', properties: { key: { type: 'string' }, value: {} } }, description: 'Meta data' },
+          meta_data: {
+            type: 'array',
+            items: { type: 'object', properties: { key: { type: 'string' }, value: {} } },
+            description: 'Meta data',
+          },
         },
         required: ['id'],
       },
@@ -156,7 +219,10 @@ registerGroup({
           const { data: result } = await client.put(`customers/${id}`, data);
           return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -180,7 +246,10 @@ registerGroup({
           const { data } = await client.delete(`customers/${args.id}`, params);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -190,9 +259,21 @@ registerGroup({
       inputSchema: {
         type: 'object',
         properties: {
-          create: { type: 'array', items: { type: 'object' }, description: 'Array of customers to create' },
-          update: { type: 'array', items: { type: 'object' }, description: 'Array of customers to update' },
-          delete: { type: 'array', items: { type: 'integer' }, description: 'Array of customer IDs to delete' },
+          create: {
+            type: 'array',
+            items: { type: 'object' },
+            description: 'Array of customers to create',
+          },
+          update: {
+            type: 'array',
+            items: { type: 'object' },
+            description: 'Array of customers to update',
+          },
+          delete: {
+            type: 'array',
+            items: { type: 'integer' },
+            description: 'Array of customer IDs to delete',
+          },
         },
       },
       handler: async (args) => {
@@ -202,7 +283,10 @@ registerGroup({
           const { data } = await client.post('customers/batch', args);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },

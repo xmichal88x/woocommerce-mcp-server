@@ -5,7 +5,20 @@ import { extractPagination } from '../types.js';
 
 function readOnlyError() {
   return {
-    content: [{ type: 'text' as const, text: JSON.stringify({ code: 'READ_ONLY', message: 'Server is in read-only mode. This operation is not allowed.', actionable: false }, null, 2) }],
+    content: [
+      {
+        type: 'text' as const,
+        text: JSON.stringify(
+          {
+            code: 'READ_ONLY',
+            message: 'Server is in read-only mode. This operation is not allowed.',
+            actionable: false,
+          },
+          null,
+          2,
+        ),
+      },
+    ],
     isError: true,
   };
 }
@@ -27,7 +40,10 @@ registerGroup({
           const { data } = await client.get('shipping/zones', {});
           return { content: [{ type: 'text', text: JSON.stringify({ zones: data }, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -47,7 +63,10 @@ registerGroup({
           const { data } = await client.get(`shipping/zones/${args.id}`, {});
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -69,7 +88,10 @@ registerGroup({
           const { data } = await client.post('shipping/zones', args);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -93,7 +115,10 @@ registerGroup({
           const { data: result } = await client.put(`shipping/zones/${id}`, data);
           return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -114,7 +139,10 @@ registerGroup({
           const { data } = await client.delete(`shipping/zones/${args.id}`, {});
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -137,7 +165,10 @@ registerGroup({
           const { data } = await client.get(`shipping/zones/${zone_id}/methods`, {});
           return { content: [{ type: 'text', text: JSON.stringify({ methods: data }, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -155,10 +186,16 @@ registerGroup({
       handler: async (args) => {
         try {
           const client = getClient();
-          const { data } = await client.get(`shipping/zones/${args.zone_id}/methods/${args.method_id}`, {});
+          const { data } = await client.get(
+            `shipping/zones/${args.zone_id}/methods/${args.method_id}`,
+            {},
+          );
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -169,7 +206,10 @@ registerGroup({
         type: 'object',
         properties: {
           zone_id: { type: 'integer', description: 'Shipping zone ID' },
-          method_id: { type: 'string', description: 'Shipping method type (e.g. free_shipping, flat_rate, local_pickup)' },
+          method_id: {
+            type: 'string',
+            description: 'Shipping method type (e.g. free_shipping, flat_rate, local_pickup)',
+          },
           title: { type: 'string', description: 'Method title' },
           order: { type: 'integer', description: 'Method order (lower first)' },
           enabled: { type: 'boolean', description: 'Enable the method', default: true },
@@ -185,7 +225,10 @@ registerGroup({
           const { data: result } = await client.post(`shipping/zones/${zone_id}/methods`, data);
           return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -209,10 +252,16 @@ registerGroup({
         try {
           const client = getClient();
           const { zone_id, method_id, ...data } = args;
-          const { data: result } = await client.put(`shipping/zones/${zone_id}/methods/${method_id}`, data);
+          const { data: result } = await client.put(
+            `shipping/zones/${zone_id}/methods/${method_id}`,
+            data,
+          );
           return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -231,10 +280,16 @@ registerGroup({
         if (isReadOnly()) return readOnlyError();
         try {
           const client = getClient();
-          const { data } = await client.delete(`shipping/zones/${args.zone_id}/methods/${args.method_id}`, {});
+          const { data } = await client.delete(
+            `shipping/zones/${args.zone_id}/methods/${args.method_id}`,
+            {},
+          );
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -255,9 +310,14 @@ registerGroup({
           const client = getClient();
           const { zone_id } = args;
           const { data } = await client.get(`shipping/zones/${zone_id}/locations`, {});
-          return { content: [{ type: 'text', text: JSON.stringify({ locations: data }, null, 2) }] };
+          return {
+            content: [{ type: 'text', text: JSON.stringify({ locations: data }, null, 2) }],
+          };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },

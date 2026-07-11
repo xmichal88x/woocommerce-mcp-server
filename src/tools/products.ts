@@ -5,7 +5,20 @@ import { extractPagination } from '../types.js';
 
 function readOnlyError() {
   return {
-    content: [{ type: 'text' as const, text: JSON.stringify({ code: 'READ_ONLY', message: 'Server is in read-only mode. This operation is not allowed.', actionable: false }, null, 2) }],
+    content: [
+      {
+        type: 'text' as const,
+        text: JSON.stringify(
+          {
+            code: 'READ_ONLY',
+            message: 'Server is in read-only mode. This operation is not allowed.',
+            actionable: false,
+          },
+          null,
+          2,
+        ),
+      },
+    ],
     isError: true,
   };
 }
@@ -23,16 +36,28 @@ registerGroup({
           page: { type: 'integer', description: 'Page number' },
           per_page: { type: 'integer', description: 'Items per page (max 100)', default: 10 },
           search: { type: 'string', description: 'Search term' },
-          status: { type: 'string', enum: ['draft', 'pending', 'private', 'publish', 'any'], description: 'Product status' },
+          status: {
+            type: 'string',
+            enum: ['draft', 'pending', 'private', 'publish', 'any'],
+            description: 'Product status',
+          },
           category: { type: 'integer', description: 'Category ID' },
           tag: { type: 'integer', description: 'Tag ID' },
           sku: { type: 'string', description: 'Product SKU' },
-          orderby: { type: 'string', enum: ['date', 'id', 'title', 'slug', 'price', 'popularity', 'rating'], description: 'Sort field' },
+          orderby: {
+            type: 'string',
+            enum: ['date', 'id', 'title', 'slug', 'price', 'popularity', 'rating'],
+            description: 'Sort field',
+          },
           order: { type: 'string', enum: ['asc', 'desc'], description: 'Sort direction' },
           min_price: { type: 'string', description: 'Minimum price' },
           max_price: { type: 'string', description: 'Maximum price' },
           on_sale: { type: 'boolean', description: 'Filter by on sale' },
-          stock_status: { type: 'string', enum: ['instock', 'outofstock', 'onbackorder'], description: 'Stock status' },
+          stock_status: {
+            type: 'string',
+            enum: ['instock', 'outofstock', 'onbackorder'],
+            description: 'Stock status',
+          },
         },
       },
       handler: async (args) => {
@@ -41,9 +66,23 @@ registerGroup({
           const params: Record<string, unknown> = { ...args };
           const { data, headers } = await client.get('products', params);
           const pagination = extractPagination(headers as Record<string, string | undefined>);
-          return { content: [{ type: 'text', text: JSON.stringify({ products: data, total: pagination.total, totalPages: pagination.totalPages }, null, 2) }] };
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(
+                  { products: data, total: pagination.total, totalPages: pagination.totalPages },
+                  null,
+                  2,
+                ),
+              },
+            ],
+          };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -63,7 +102,10 @@ registerGroup({
           const { data } = await client.get(`products/${args.id}`, {});
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -74,21 +116,58 @@ registerGroup({
         type: 'object',
         properties: {
           name: { type: 'string', description: 'Product name' },
-          type: { type: 'string', enum: ['simple', 'grouped', 'external', 'variable'], description: 'Product type', default: 'simple' },
+          type: {
+            type: 'string',
+            enum: ['simple', 'grouped', 'external', 'variable'],
+            description: 'Product type',
+            default: 'simple',
+          },
           regular_price: { type: 'string', description: 'Regular price' },
           sale_price: { type: 'string', description: 'Sale price' },
           description: { type: 'string', description: 'Product description (HTML)' },
           short_description: { type: 'string', description: 'Short description (HTML)' },
           sku: { type: 'string', description: 'Product SKU' },
           stock_quantity: { type: 'integer', description: 'Stock quantity' },
-          stock_status: { type: 'string', enum: ['instock', 'outofstock', 'onbackorder'], description: 'Stock status' },
-          categories: { type: 'array', items: { type: 'object', properties: { id: { type: 'integer' } } }, description: 'Category IDs' },
-          tags: { type: 'array', items: { type: 'object', properties: { id: { type: 'integer' } } }, description: 'Tag IDs' },
-          images: { type: 'array', items: { type: 'object', properties: { src: { type: 'string' } } }, description: 'Product images' },
-          attributes: { type: 'array', items: { type: 'object' }, description: 'Product attributes' },
+          stock_status: {
+            type: 'string',
+            enum: ['instock', 'outofstock', 'onbackorder'],
+            description: 'Stock status',
+          },
+          categories: {
+            type: 'array',
+            items: { type: 'object', properties: { id: { type: 'integer' } } },
+            description: 'Category IDs',
+          },
+          tags: {
+            type: 'array',
+            items: { type: 'object', properties: { id: { type: 'integer' } } },
+            description: 'Tag IDs',
+          },
+          images: {
+            type: 'array',
+            items: { type: 'object', properties: { src: { type: 'string' } } },
+            description: 'Product images',
+          },
+          attributes: {
+            type: 'array',
+            items: { type: 'object' },
+            description: 'Product attributes',
+          },
           weight: { type: 'string', description: 'Product weight' },
-          dimensions: { type: 'object', properties: { length: { type: 'string' }, width: { type: 'string' }, height: { type: 'string' } }, description: 'Product dimensions' },
-          meta_data: { type: 'array', items: { type: 'object', properties: { key: { type: 'string' }, value: {} } }, description: 'Meta data' },
+          dimensions: {
+            type: 'object',
+            properties: {
+              length: { type: 'string' },
+              width: { type: 'string' },
+              height: { type: 'string' },
+            },
+            description: 'Product dimensions',
+          },
+          meta_data: {
+            type: 'array',
+            items: { type: 'object', properties: { key: { type: 'string' }, value: {} } },
+            description: 'Meta data',
+          },
         },
         required: ['name'],
       },
@@ -99,7 +178,10 @@ registerGroup({
           const { data } = await client.post('products', args);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -111,21 +193,57 @@ registerGroup({
         properties: {
           id: { type: 'integer', description: 'Product ID' },
           name: { type: 'string', description: 'Product name' },
-          type: { type: 'string', enum: ['simple', 'grouped', 'external', 'variable'], description: 'Product type' },
+          type: {
+            type: 'string',
+            enum: ['simple', 'grouped', 'external', 'variable'],
+            description: 'Product type',
+          },
           regular_price: { type: 'string', description: 'Regular price' },
           sale_price: { type: 'string', description: 'Sale price' },
           description: { type: 'string', description: 'Product description (HTML)' },
           short_description: { type: 'string', description: 'Short description (HTML)' },
           sku: { type: 'string', description: 'Product SKU' },
           stock_quantity: { type: 'integer', description: 'Stock quantity' },
-          stock_status: { type: 'string', enum: ['instock', 'outofstock', 'onbackorder'], description: 'Stock status' },
-          categories: { type: 'array', items: { type: 'object', properties: { id: { type: 'integer' } } }, description: 'Category IDs' },
-          tags: { type: 'array', items: { type: 'object', properties: { id: { type: 'integer' } } }, description: 'Tag IDs' },
-          images: { type: 'array', items: { type: 'object', properties: { src: { type: 'string' } } }, description: 'Product images' },
-          attributes: { type: 'array', items: { type: 'object' }, description: 'Product attributes' },
+          stock_status: {
+            type: 'string',
+            enum: ['instock', 'outofstock', 'onbackorder'],
+            description: 'Stock status',
+          },
+          categories: {
+            type: 'array',
+            items: { type: 'object', properties: { id: { type: 'integer' } } },
+            description: 'Category IDs',
+          },
+          tags: {
+            type: 'array',
+            items: { type: 'object', properties: { id: { type: 'integer' } } },
+            description: 'Tag IDs',
+          },
+          images: {
+            type: 'array',
+            items: { type: 'object', properties: { src: { type: 'string' } } },
+            description: 'Product images',
+          },
+          attributes: {
+            type: 'array',
+            items: { type: 'object' },
+            description: 'Product attributes',
+          },
           weight: { type: 'string', description: 'Product weight' },
-          dimensions: { type: 'object', properties: { length: { type: 'string' }, width: { type: 'string' }, height: { type: 'string' } }, description: 'Product dimensions' },
-          meta_data: { type: 'array', items: { type: 'object', properties: { key: { type: 'string' }, value: {} } }, description: 'Meta data' },
+          dimensions: {
+            type: 'object',
+            properties: {
+              length: { type: 'string' },
+              width: { type: 'string' },
+              height: { type: 'string' },
+            },
+            description: 'Product dimensions',
+          },
+          meta_data: {
+            type: 'array',
+            items: { type: 'object', properties: { key: { type: 'string' }, value: {} } },
+            description: 'Meta data',
+          },
         },
         required: ['id'],
       },
@@ -137,7 +255,10 @@ registerGroup({
           const { data: result } = await client.put(`products/${id}`, data);
           return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -161,7 +282,10 @@ registerGroup({
           const { data } = await client.delete(`products/${args.id}`, params);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -171,9 +295,21 @@ registerGroup({
       inputSchema: {
         type: 'object',
         properties: {
-          create: { type: 'array', items: { type: 'object' }, description: 'Array of products to create' },
-          update: { type: 'array', items: { type: 'object' }, description: 'Array of products to update' },
-          delete: { type: 'array', items: { type: 'integer' }, description: 'Array of product IDs to delete' },
+          create: {
+            type: 'array',
+            items: { type: 'object' },
+            description: 'Array of products to create',
+          },
+          update: {
+            type: 'array',
+            items: { type: 'object' },
+            description: 'Array of products to update',
+          },
+          delete: {
+            type: 'array',
+            items: { type: 'integer' },
+            description: 'Array of product IDs to delete',
+          },
         },
       },
       handler: async (args) => {
@@ -183,7 +319,10 @@ registerGroup({
           const { data } = await client.post('products/batch', args);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -207,9 +346,23 @@ registerGroup({
           const { product_id, ...params } = args;
           const { data, headers } = await client.get(`products/${product_id}/variations`, params);
           const pagination = extractPagination(headers as Record<string, string | undefined>);
-          return { content: [{ type: 'text', text: JSON.stringify({ variations: data, total: pagination.total, totalPages: pagination.totalPages }, null, 2) }] };
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(
+                  { variations: data, total: pagination.total, totalPages: pagination.totalPages },
+                  null,
+                  2,
+                ),
+              },
+            ],
+          };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -227,10 +380,16 @@ registerGroup({
       handler: async (args) => {
         try {
           const client = getClient();
-          const { data } = await client.get(`products/${args.product_id}/variations/${args.variation_id}`, {});
+          const { data } = await client.get(
+            `products/${args.product_id}/variations/${args.variation_id}`,
+            {},
+          );
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -245,12 +404,40 @@ registerGroup({
           sale_price: { type: 'string', description: 'Sale price' },
           sku: { type: 'string', description: 'Variation SKU' },
           stock_quantity: { type: 'integer', description: 'Stock quantity' },
-          stock_status: { type: 'string', enum: ['instock', 'outofstock', 'onbackorder'], description: 'Stock status' },
+          stock_status: {
+            type: 'string',
+            enum: ['instock', 'outofstock', 'onbackorder'],
+            description: 'Stock status',
+          },
           weight: { type: 'string', description: 'Variation weight' },
-          dimensions: { type: 'object', properties: { length: { type: 'string' }, width: { type: 'string' }, height: { type: 'string' } }, description: 'Variation dimensions' },
-          attributes: { type: 'array', items: { type: 'object' }, description: 'Variation attributes' },
-          image: { type: 'object', properties: { src: { type: 'string' }, alt: { type: 'string' }, name: { type: 'string' } }, description: 'Variation image' },
-          meta_data: { type: 'array', items: { type: 'object', properties: { key: { type: 'string' }, value: {} } }, description: 'Meta data' },
+          dimensions: {
+            type: 'object',
+            properties: {
+              length: { type: 'string' },
+              width: { type: 'string' },
+              height: { type: 'string' },
+            },
+            description: 'Variation dimensions',
+          },
+          attributes: {
+            type: 'array',
+            items: { type: 'object' },
+            description: 'Variation attributes',
+          },
+          image: {
+            type: 'object',
+            properties: {
+              src: { type: 'string' },
+              alt: { type: 'string' },
+              name: { type: 'string' },
+            },
+            description: 'Variation image',
+          },
+          meta_data: {
+            type: 'array',
+            items: { type: 'object', properties: { key: { type: 'string' }, value: {} } },
+            description: 'Meta data',
+          },
         },
         required: ['product_id'],
       },
@@ -262,7 +449,10 @@ registerGroup({
           const { data: result } = await client.post(`products/${product_id}/variations`, data);
           return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -278,12 +468,40 @@ registerGroup({
           sale_price: { type: 'string', description: 'Sale price' },
           sku: { type: 'string', description: 'Variation SKU' },
           stock_quantity: { type: 'integer', description: 'Stock quantity' },
-          stock_status: { type: 'string', enum: ['instock', 'outofstock', 'onbackorder'], description: 'Stock status' },
+          stock_status: {
+            type: 'string',
+            enum: ['instock', 'outofstock', 'onbackorder'],
+            description: 'Stock status',
+          },
           weight: { type: 'string', description: 'Variation weight' },
-          dimensions: { type: 'object', properties: { length: { type: 'string' }, width: { type: 'string' }, height: { type: 'string' } }, description: 'Variation dimensions' },
-          attributes: { type: 'array', items: { type: 'object' }, description: 'Variation attributes' },
-          image: { type: 'object', properties: { src: { type: 'string' }, alt: { type: 'string' }, name: { type: 'string' } }, description: 'Variation image' },
-          meta_data: { type: 'array', items: { type: 'object', properties: { key: { type: 'string' }, value: {} } }, description: 'Meta data' },
+          dimensions: {
+            type: 'object',
+            properties: {
+              length: { type: 'string' },
+              width: { type: 'string' },
+              height: { type: 'string' },
+            },
+            description: 'Variation dimensions',
+          },
+          attributes: {
+            type: 'array',
+            items: { type: 'object' },
+            description: 'Variation attributes',
+          },
+          image: {
+            type: 'object',
+            properties: {
+              src: { type: 'string' },
+              alt: { type: 'string' },
+              name: { type: 'string' },
+            },
+            description: 'Variation image',
+          },
+          meta_data: {
+            type: 'array',
+            items: { type: 'object', properties: { key: { type: 'string' }, value: {} } },
+            description: 'Meta data',
+          },
         },
         required: ['product_id', 'variation_id'],
       },
@@ -292,10 +510,16 @@ registerGroup({
         try {
           const client = getClient();
           const { product_id, variation_id, ...data } = args;
-          const { data: result } = await client.put(`products/${product_id}/variations/${variation_id}`, data);
+          const { data: result } = await client.put(
+            `products/${product_id}/variations/${variation_id}`,
+            data,
+          );
           return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -317,10 +541,16 @@ registerGroup({
           const client = getClient();
           const params: Record<string, unknown> = {};
           if (args.force !== undefined) params.force = args.force;
-          const { data } = await client.delete(`products/${args.product_id}/variations/${args.variation_id}`, params);
+          const { data } = await client.delete(
+            `products/${args.product_id}/variations/${args.variation_id}`,
+            params,
+          );
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -344,9 +574,23 @@ registerGroup({
           const params: Record<string, unknown> = { ...args };
           const { data, headers } = await client.get('products/categories', params);
           const pagination = extractPagination(headers as Record<string, string | undefined>);
-          return { content: [{ type: 'text', text: JSON.stringify({ categories: data, total: pagination.total, totalPages: pagination.totalPages }, null, 2) }] };
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(
+                  { categories: data, total: pagination.total, totalPages: pagination.totalPages },
+                  null,
+                  2,
+                ),
+              },
+            ],
+          };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -366,7 +610,10 @@ registerGroup({
           const { data } = await client.get(`products/categories/${args.id}`, {});
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -380,7 +627,11 @@ registerGroup({
           slug: { type: 'string', description: 'Category slug' },
           description: { type: 'string', description: 'Category description' },
           parent: { type: 'integer', description: 'Parent category ID' },
-          image: { type: 'object', properties: { src: { type: 'string' }, alt: { type: 'string' } }, description: 'Category image' },
+          image: {
+            type: 'object',
+            properties: { src: { type: 'string' }, alt: { type: 'string' } },
+            description: 'Category image',
+          },
         },
         required: ['name'],
       },
@@ -391,7 +642,10 @@ registerGroup({
           const { data } = await client.post('products/categories', args);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -406,7 +660,11 @@ registerGroup({
           slug: { type: 'string', description: 'Category slug' },
           description: { type: 'string', description: 'Category description' },
           parent: { type: 'integer', description: 'Parent category ID' },
-          image: { type: 'object', properties: { src: { type: 'string' }, alt: { type: 'string' } }, description: 'Category image' },
+          image: {
+            type: 'object',
+            properties: { src: { type: 'string' }, alt: { type: 'string' } },
+            description: 'Category image',
+          },
         },
         required: ['id'],
       },
@@ -418,7 +676,10 @@ registerGroup({
           const { data: result } = await client.put(`products/categories/${id}`, data);
           return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -442,7 +703,10 @@ registerGroup({
           const { data } = await client.delete(`products/categories/${args.id}`, params);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -457,7 +721,11 @@ registerGroup({
           page: { type: 'integer', description: 'Page number' },
           per_page: { type: 'integer', description: 'Items per page (max 100)', default: 10 },
           search: { type: 'string', description: 'Search term' },
-          orderby: { type: 'string', enum: ['id', 'name', 'slug', 'count'], description: 'Sort field' },
+          orderby: {
+            type: 'string',
+            enum: ['id', 'name', 'slug', 'count'],
+            description: 'Sort field',
+          },
           order: { type: 'string', enum: ['asc', 'desc'], description: 'Sort direction' },
           hide_empty: { type: 'boolean', description: 'Hide empty tags' },
         },
@@ -468,9 +736,23 @@ registerGroup({
           const params: Record<string, unknown> = { ...args };
           const { data, headers } = await client.get('products/tags', params);
           const pagination = extractPagination(headers as Record<string, string | undefined>);
-          return { content: [{ type: 'text', text: JSON.stringify({ tags: data, total: pagination.total, totalPages: pagination.totalPages }, null, 2) }] };
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(
+                  { tags: data, total: pagination.total, totalPages: pagination.totalPages },
+                  null,
+                  2,
+                ),
+              },
+            ],
+          };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -490,7 +772,10 @@ registerGroup({
           const { data } = await client.get(`products/tags/${args.id}`, {});
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -513,7 +798,10 @@ registerGroup({
           const { data } = await client.post('products/tags', args);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -538,7 +826,10 @@ registerGroup({
           const { data: result } = await client.put(`products/tags/${id}`, data);
           return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -562,7 +853,10 @@ registerGroup({
           const { data } = await client.delete(`products/tags/${args.id}`, params);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -577,7 +871,11 @@ registerGroup({
           page: { type: 'integer', description: 'Page number' },
           per_page: { type: 'integer', description: 'Items per page (max 100)', default: 10 },
           search: { type: 'string', description: 'Search term' },
-          orderby: { type: 'string', enum: ['id', 'name', 'slug', 'count'], description: 'Sort field' },
+          orderby: {
+            type: 'string',
+            enum: ['id', 'name', 'slug', 'count'],
+            description: 'Sort field',
+          },
           order: { type: 'string', enum: ['asc', 'desc'], description: 'Sort direction' },
         },
       },
@@ -587,9 +885,23 @@ registerGroup({
           const params: Record<string, unknown> = { ...args };
           const { data, headers } = await client.get('products/attributes', params);
           const pagination = extractPagination(headers as Record<string, string | undefined>);
-          return { content: [{ type: 'text', text: JSON.stringify({ attributes: data, total: pagination.total, totalPages: pagination.totalPages }, null, 2) }] };
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(
+                  { attributes: data, total: pagination.total, totalPages: pagination.totalPages },
+                  null,
+                  2,
+                ),
+              },
+            ],
+          };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -609,7 +921,10 @@ registerGroup({
           const { data } = await client.get(`products/attributes/${args.id}`, {});
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -621,8 +936,17 @@ registerGroup({
         properties: {
           name: { type: 'string', description: 'Attribute name' },
           slug: { type: 'string', description: 'Attribute slug' },
-          type: { type: 'string', enum: ['select', 'text'], description: 'Attribute type', default: 'select' },
-          order_by: { type: 'string', enum: ['menu_order', 'name', 'name_num', 'id'], description: 'Sort order for terms' },
+          type: {
+            type: 'string',
+            enum: ['select', 'text'],
+            description: 'Attribute type',
+            default: 'select',
+          },
+          order_by: {
+            type: 'string',
+            enum: ['menu_order', 'name', 'name_num', 'id'],
+            description: 'Sort order for terms',
+          },
           has_archives: { type: 'boolean', description: 'Enable attribute archives' },
         },
         required: ['name'],
@@ -634,7 +958,10 @@ registerGroup({
           const { data } = await client.post('products/attributes', args);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -648,7 +975,11 @@ registerGroup({
           name: { type: 'string', description: 'Attribute name' },
           slug: { type: 'string', description: 'Attribute slug' },
           type: { type: 'string', enum: ['select', 'text'], description: 'Attribute type' },
-          order_by: { type: 'string', enum: ['menu_order', 'name', 'name_num', 'id'], description: 'Sort order for terms' },
+          order_by: {
+            type: 'string',
+            enum: ['menu_order', 'name', 'name_num', 'id'],
+            description: 'Sort order for terms',
+          },
           has_archives: { type: 'boolean', description: 'Enable attribute archives' },
         },
         required: ['id'],
@@ -661,7 +992,10 @@ registerGroup({
           const { data: result } = await client.put(`products/attributes/${id}`, data);
           return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -685,7 +1019,10 @@ registerGroup({
           const { data } = await client.delete(`products/attributes/${args.id}`, params);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -699,7 +1036,11 @@ registerGroup({
           page: { type: 'integer', description: 'Page number' },
           per_page: { type: 'integer', description: 'Items per page (max 100)', default: 10 },
           search: { type: 'string', description: 'Search term' },
-          orderby: { type: 'string', enum: ['id', 'name', 'slug', 'count'], description: 'Sort field' },
+          orderby: {
+            type: 'string',
+            enum: ['id', 'name', 'slug', 'count'],
+            description: 'Sort field',
+          },
           order: { type: 'string', enum: ['asc', 'desc'], description: 'Sort direction' },
           hide_empty: { type: 'boolean', description: 'Hide empty terms' },
         },
@@ -709,11 +1050,28 @@ registerGroup({
         try {
           const client = getClient();
           const { attribute_id, ...params } = args;
-          const { data, headers } = await client.get(`products/attributes/${attribute_id}/terms`, params);
+          const { data, headers } = await client.get(
+            `products/attributes/${attribute_id}/terms`,
+            params,
+          );
           const pagination = extractPagination(headers as Record<string, string | undefined>);
-          return { content: [{ type: 'text', text: JSON.stringify({ terms: data, total: pagination.total, totalPages: pagination.totalPages }, null, 2) }] };
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(
+                  { terms: data, total: pagination.total, totalPages: pagination.totalPages },
+                  null,
+                  2,
+                ),
+              },
+            ],
+          };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -735,10 +1093,16 @@ registerGroup({
         try {
           const client = getClient();
           const { attribute_id, ...data } = args;
-          const { data: result } = await client.post(`products/attributes/${attribute_id}/terms`, data);
+          const { data: result } = await client.post(
+            `products/attributes/${attribute_id}/terms`,
+            data,
+          );
           return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -754,8 +1118,16 @@ registerGroup({
           per_page: { type: 'integer', description: 'Items per page (max 100)', default: 10 },
           search: { type: 'string', description: 'Search term' },
           product: { type: 'integer', description: 'Product ID to filter by' },
-          status: { type: 'string', enum: ['approved', 'hold', 'spam', 'unspam', 'trash', 'all'], description: 'Review status' },
-          orderby: { type: 'string', enum: ['date', 'id', 'product', 'rating'], description: 'Sort field' },
+          status: {
+            type: 'string',
+            enum: ['approved', 'hold', 'spam', 'unspam', 'trash', 'all'],
+            description: 'Review status',
+          },
+          orderby: {
+            type: 'string',
+            enum: ['date', 'id', 'product', 'rating'],
+            description: 'Sort field',
+          },
           order: { type: 'string', enum: ['asc', 'desc'], description: 'Sort direction' },
         },
       },
@@ -765,9 +1137,23 @@ registerGroup({
           const params: Record<string, unknown> = { ...args };
           const { data, headers } = await client.get('products/reviews', params);
           const pagination = extractPagination(headers as Record<string, string | undefined>);
-          return { content: [{ type: 'text', text: JSON.stringify({ reviews: data, total: pagination.total, totalPages: pagination.totalPages }, null, 2) }] };
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(
+                  { reviews: data, total: pagination.total, totalPages: pagination.totalPages },
+                  null,
+                  2,
+                ),
+              },
+            ],
+          };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -787,7 +1173,10 @@ registerGroup({
           const { data } = await client.get(`products/reviews/${args.id}`, {});
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -812,7 +1201,10 @@ registerGroup({
           const { data } = await client.post('products/reviews', args);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },

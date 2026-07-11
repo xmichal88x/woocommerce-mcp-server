@@ -7,19 +7,26 @@ export interface ToolGroupConfig {
 }
 
 const ALL_GROUPS = [
-  'products', 'orders', 'customers', 'coupons',
-  'shipping', 'taxes', 'reports', 'system', 'email'
+  'products',
+  'orders',
+  'customers',
+  'coupons',
+  'shipping',
+  'taxes',
+  'reports',
+  'system',
+  'email',
 ] as const;
 
-export type ToolGroup = typeof ALL_GROUPS[number];
+export type ToolGroup = (typeof ALL_GROUPS)[number];
 
 export function getEnabledGroups(): ToolGroupConfig[] {
   const enabledStr = process.env.WC_TOOL_GROUPS || 'all';
-  const enabledList = enabledStr.split(',').map(s => s.trim().toLowerCase());
+  const enabledList = enabledStr.split(',').map((s) => s.trim().toLowerCase());
 
-  return ALL_GROUPS.map(name => ({
+  return ALL_GROUPS.map((name) => ({
     name,
-    enabled: enabledList.includes(name) || enabledList.includes('all')
+    enabled: enabledList.includes(name) || enabledList.includes('all'),
   }));
 }
 

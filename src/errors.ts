@@ -33,7 +33,8 @@ export function safeError(error: unknown): SafeError {
       if (msg.includes('ENOTFOUND') || msg.includes('ECONNREFUSED')) {
         return {
           code: 'NETWORK_ERROR',
-          message: 'Cannot connect to the WooCommerce store. Check the URL and network connectivity.',
+          message:
+            'Cannot connect to the WooCommerce store. Check the URL and network connectivity.',
           actionable: true,
         };
       }

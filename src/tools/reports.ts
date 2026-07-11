@@ -13,8 +13,15 @@ registerGroup({
         properties: {
           date_min: { type: 'string', description: 'Start date (YYYY-MM-DD)' },
           date_max: { type: 'string', description: 'End date (YYYY-MM-DD)' },
-          period: { type: 'string', enum: ['year', 'last_month', 'this_month', 'last_week', 'this_week', '7day', '30day'], description: 'Report period' },
-          date_context: { type: 'string', description: 'Date context for comparison (e.g. before/during)' },
+          period: {
+            type: 'string',
+            enum: ['year', 'last_month', 'this_month', 'last_week', 'this_week', '7day', '30day'],
+            description: 'Report period',
+          },
+          date_context: {
+            type: 'string',
+            description: 'Date context for comparison (e.g. before/during)',
+          },
         },
       },
       handler: async (args) => {
@@ -24,7 +31,10 @@ registerGroup({
           const { data } = await client.get('reports/sales', params);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -34,7 +44,11 @@ registerGroup({
       inputSchema: {
         type: 'object',
         properties: {
-          period: { type: 'string', enum: ['year', 'last_month', 'this_month', 'last_week', 'this_week', '7day', '30day'], description: 'Report period' },
+          period: {
+            type: 'string',
+            enum: ['year', 'last_month', 'this_month', 'last_week', 'this_week', '7day', '30day'],
+            description: 'Report period',
+          },
           date_min: { type: 'string', description: 'Start date (YYYY-MM-DD)' },
           date_max: { type: 'string', description: 'End date (YYYY-MM-DD)' },
           limit: { type: 'integer', description: 'Maximum number of items to return', default: 10 },
@@ -47,7 +61,10 @@ registerGroup({
           const { data } = await client.get('reports/top_sellers', params);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -57,7 +74,11 @@ registerGroup({
       inputSchema: {
         type: 'object',
         properties: {
-          period: { type: 'string', enum: ['year', 'last_month', 'this_month', 'last_week', 'this_week', '7day', '30day'], description: 'Report period' },
+          period: {
+            type: 'string',
+            enum: ['year', 'last_month', 'this_month', 'last_week', 'this_week', '7day', '30day'],
+            description: 'Report period',
+          },
           date_min: { type: 'string', description: 'Start date (YYYY-MM-DD)' },
           date_max: { type: 'string', description: 'End date (YYYY-MM-DD)' },
         },
@@ -69,7 +90,10 @@ registerGroup({
           const { data } = await client.get('reports/products', params);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -79,7 +103,11 @@ registerGroup({
       inputSchema: {
         type: 'object',
         properties: {
-          period: { type: 'string', enum: ['year', 'last_month', 'this_month', 'last_week', 'this_week', '7day', '30day'], description: 'Report period' },
+          period: {
+            type: 'string',
+            enum: ['year', 'last_month', 'this_month', 'last_week', 'this_week', '7day', '30day'],
+            description: 'Report period',
+          },
           date_min: { type: 'string', description: 'Start date (YYYY-MM-DD)' },
           date_max: { type: 'string', description: 'End date (YYYY-MM-DD)' },
         },
@@ -91,7 +119,10 @@ registerGroup({
           const { data } = await client.get('reports/orders', params);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -101,7 +132,11 @@ registerGroup({
       inputSchema: {
         type: 'object',
         properties: {
-          period: { type: 'string', enum: ['year', 'last_month', 'this_month', 'last_week', 'this_week', '7day', '30day'], description: 'Report period' },
+          period: {
+            type: 'string',
+            enum: ['year', 'last_month', 'this_month', 'last_week', 'this_week', '7day', '30day'],
+            description: 'Report period',
+          },
           date_min: { type: 'string', description: 'Start date (YYYY-MM-DD)' },
           date_max: { type: 'string', description: 'End date (YYYY-MM-DD)' },
         },
@@ -113,7 +148,10 @@ registerGroup({
           const { data } = await client.get('reports/customers', params);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -123,10 +161,18 @@ registerGroup({
       inputSchema: {
         type: 'object',
         properties: {
-          period: { type: 'string', enum: ['year', 'last_month', 'this_month', 'last_week', 'this_week', '7day', '30day'], description: 'Report period' },
+          period: {
+            type: 'string',
+            enum: ['year', 'last_month', 'this_month', 'last_week', 'this_week', '7day', '30day'],
+            description: 'Report period',
+          },
           date_min: { type: 'string', description: 'Start date (YYYY-MM-DD)' },
           date_max: { type: 'string', description: 'End date (YYYY-MM-DD)' },
-          coupon: { type: 'array', items: { type: 'string' }, description: 'Coupon codes to filter by' },
+          coupon: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'Coupon codes to filter by',
+          },
         },
       },
       handler: async (args) => {
@@ -136,7 +182,10 @@ registerGroup({
           const { data } = await client.get('reports/coupons', params);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -146,7 +195,12 @@ registerGroup({
       inputSchema: {
         type: 'object',
         properties: {
-          type: { type: 'string', enum: ['all', 'low', 'outofstock', 'instock'], description: 'Stock type filter', default: 'all' },
+          type: {
+            type: 'string',
+            enum: ['all', 'low', 'outofstock', 'instock'],
+            description: 'Stock type filter',
+            default: 'all',
+          },
         },
       },
       handler: async (args) => {
@@ -156,7 +210,10 @@ registerGroup({
           const { data } = await client.get('reports/stock', params);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -166,7 +223,11 @@ registerGroup({
       inputSchema: {
         type: 'object',
         properties: {
-          period: { type: 'string', enum: ['year', 'last_month', 'this_month', 'last_week', 'this_week', '7day', '30day'], description: 'Report period' },
+          period: {
+            type: 'string',
+            enum: ['year', 'last_month', 'this_month', 'last_week', 'this_week', '7day', '30day'],
+            description: 'Report period',
+          },
           date_min: { type: 'string', description: 'Start date (YYYY-MM-DD)' },
           date_max: { type: 'string', description: 'End date (YYYY-MM-DD)' },
         },
@@ -178,7 +239,10 @@ registerGroup({
           const { data } = await client.get('reports/revenue/stat', params);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },

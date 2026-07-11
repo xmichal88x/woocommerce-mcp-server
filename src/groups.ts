@@ -23,7 +23,7 @@ export function registerGroup(group: ToolGroupDefinition): void {
 
 export function getActiveTools(): ToolDefinition[] {
   const enabledGroups = getEnabledGroups();
-  const enabledNames = new Set(enabledGroups.filter(g => g.enabled).map(g => g.name));
+  const enabledNames = new Set(enabledGroups.filter((g) => g.enabled).map((g) => g.name));
 
   const tools: ToolDefinition[] = [];
   for (const [groupName, group] of groupRegistry) {

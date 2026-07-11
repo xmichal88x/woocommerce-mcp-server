@@ -47,7 +47,20 @@ registerGroup({
         try {
           if (!smtpConfigured()) {
             return {
-              content: [{ type: 'text', text: JSON.stringify({ code: 'SMTP_NOT_CONFIGURED', message: 'Email not configured. Set SMTP_HOST, SMTP_USER, SMTP_PASS.', actionable: true }, null, 2) }],
+              content: [
+                {
+                  type: 'text',
+                  text: JSON.stringify(
+                    {
+                      code: 'SMTP_NOT_CONFIGURED',
+                      message: 'Email not configured. Set SMTP_HOST, SMTP_USER, SMTP_PASS.',
+                      actionable: true,
+                    },
+                    null,
+                    2,
+                  ),
+                },
+              ],
               isError: true,
             };
           }
@@ -66,10 +79,18 @@ registerGroup({
           });
 
           return {
-            content: [{ type: 'text', text: JSON.stringify({ success: true, messageId: info.messageId }, null, 2) }],
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify({ success: true, messageId: info.messageId }, null, 2),
+              },
+            ],
           };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },

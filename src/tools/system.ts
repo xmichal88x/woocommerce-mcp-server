@@ -19,7 +19,10 @@ registerGroup({
           const { data } = await client.get('system_status', {});
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -36,7 +39,10 @@ registerGroup({
           const { data } = await client.get('system_status/tools', {});
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -53,7 +59,10 @@ registerGroup({
           const { data } = await client.get('data', {});
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -70,7 +79,10 @@ registerGroup({
           const { data } = await client.get('data/continents', {});
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -87,7 +99,10 @@ registerGroup({
           const { data } = await client.get('data/countries', {});
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -104,7 +119,10 @@ registerGroup({
           const { data } = await client.get('data/currencies', {});
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -121,7 +139,10 @@ registerGroup({
           const { data } = await client.get('data/currencies/current', {});
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -141,9 +162,23 @@ registerGroup({
           const params: Record<string, unknown> = { ...args };
           const { data, headers } = await client.get('settings/general', params);
           const pagination = extractPagination(headers as Record<string, string | undefined>);
-          return { content: [{ type: 'text', text: JSON.stringify({ settings: data, total: pagination.total, totalPages: pagination.totalPages }, null, 2) }] };
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(
+                  { settings: data, total: pagination.total, totalPages: pagination.totalPages },
+                  null,
+                  2,
+                ),
+              },
+            ],
+          };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -160,7 +195,10 @@ registerGroup({
           const { data } = await client.get('payment_gateways', {});
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },

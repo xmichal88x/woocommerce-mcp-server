@@ -5,7 +5,20 @@ import { extractPagination } from '../types.js';
 
 function readOnlyError() {
   return {
-    content: [{ type: 'text' as const, text: JSON.stringify({ code: 'READ_ONLY', message: 'Server is in read-only mode. This operation is not allowed.', actionable: false }, null, 2) }],
+    content: [
+      {
+        type: 'text' as const,
+        text: JSON.stringify(
+          {
+            code: 'READ_ONLY',
+            message: 'Server is in read-only mode. This operation is not allowed.',
+            actionable: false,
+          },
+          null,
+          2,
+        ),
+      },
+    ],
     isError: true,
   };
 }
@@ -25,9 +38,14 @@ registerGroup({
         try {
           const client = getClient();
           const { data } = await client.get('taxes/classes', {});
-          return { content: [{ type: 'text', text: JSON.stringify({ tax_classes: data }, null, 2) }] };
+          return {
+            content: [{ type: 'text', text: JSON.stringify({ tax_classes: data }, null, 2) }],
+          };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -48,7 +66,10 @@ registerGroup({
           const { data } = await client.post('taxes/classes', args);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -69,7 +90,10 @@ registerGroup({
           const { data } = await client.delete(`taxes/classes/${args.slug}`, {});
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -94,9 +118,23 @@ registerGroup({
           const params: Record<string, unknown> = { ...args };
           const { data, headers } = await client.get('taxes/rates', params);
           const pagination = extractPagination(headers as Record<string, string | undefined>);
-          return { content: [{ type: 'text', text: JSON.stringify({ tax_rates: data, total: pagination.total, totalPages: pagination.totalPages }, null, 2) }] };
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(
+                  { tax_rates: data, total: pagination.total, totalPages: pagination.totalPages },
+                  null,
+                  2,
+                ),
+              },
+            ],
+          };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -116,7 +154,10 @@ registerGroup({
           const { data } = await client.get(`taxes/rates/${args.id}`, {});
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -148,7 +189,10 @@ registerGroup({
           const { data } = await client.post('taxes/rates', args);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -182,7 +226,10 @@ registerGroup({
           const { data: result } = await client.put(`taxes/rates/${id}`, data);
           return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },
@@ -203,7 +250,10 @@ registerGroup({
           const { data } = await client.delete(`taxes/rates/${args.id}`, {});
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
         } catch (error) {
-          return { content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }], isError: true };
+          return {
+            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
+            isError: true,
+          };
         }
       },
     },

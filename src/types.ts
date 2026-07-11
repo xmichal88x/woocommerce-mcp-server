@@ -20,7 +20,14 @@ export interface WooProduct {
   categories: { id: number; name: string; slug: string }[];
   tags: { id: number; name: string; slug: string }[];
   images: { id: number; src: string; name: string; alt: string }[];
-  attributes: { id: number; name: string; position: number; visible: boolean; variation: boolean; options: string[] }[];
+  attributes: {
+    id: number;
+    name: string;
+    position: number;
+    visible: boolean;
+    variation: boolean;
+    options: string[];
+  }[];
   default_attributes: { id: number; name: string; option: string }[];
   variations: number[];
   grouped_products: number[];
@@ -206,7 +213,9 @@ export interface PaginationInfo {
 }
 
 // Helper to extract pagination from WooCommerce API headers
-export function extractPagination(headers: Record<string, string | string[] | undefined>): PaginationInfo {
+export function extractPagination(
+  headers: Record<string, string | string[] | undefined>,
+): PaginationInfo {
   return {
     total: parseInt(String(headers['x-wp-total'] || '0'), 10),
     totalPages: parseInt(String(headers['x-wp-totalpages'] || '0'), 10),

@@ -12,13 +12,13 @@ export async function startServer(): Promise<void> {
 
   mcpServer = new Server(
     { name: 'woocommerce-mcp', version: '1.0.0' },
-    { capabilities: { tools: {} } }
+    { capabilities: { tools: {} } },
   );
 
   mcpServer.setRequestHandler(ListToolsRequestSchema, async () => {
     const activeTools = getActiveTools();
     return {
-      tools: activeTools.map(t => ({
+      tools: activeTools.map((t) => ({
         name: t.name,
         description: t.description,
         inputSchema: t.inputSchema,
@@ -29,7 +29,7 @@ export async function startServer(): Promise<void> {
   mcpServer.setRequestHandler(CallToolRequestSchema, async (request) => {
     const { name, arguments: args } = request.params;
     const activeTools = getActiveTools();
-    const tool = activeTools.find(t => t.name === name);
+    const tool = activeTools.find((t) => t.name === name);
 
     if (!tool) {
       return {
@@ -53,7 +53,11 @@ export async function startServer(): Promise<void> {
   await mcpServer.connect(transport);
 
   console.error('WooCommerce MCP Server running on stdio');
-  console.error(`Enabled groups: ${getActiveTools().map(t => t.name).join(', ')}`);
+  console.error(
+    `Enabled groups: ${getActiveTools()
+      .map((t) => t.name)
+      .join(', ')}`,
+  );
 }
 
 export async function stopServer(): Promise<void> {
