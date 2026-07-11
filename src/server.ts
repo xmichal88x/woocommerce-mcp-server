@@ -2,13 +2,14 @@ import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { ListToolsRequestSchema, CallToolRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { getActiveTools } from './groups.js';
+import type { Config } from './config.js';
 import { getConfig } from './config.js';
 import { safeError } from './errors.js';
 
 let mcpServer: Server | null = null;
 
-export async function startServer(): Promise<void> {
-  const config = getConfig();
+export async function startServer(config?: Config): Promise<void> {
+  const cfg = config ?? getConfig();
 
   mcpServer = new Server(
     { name: 'woocommerce-mcp', version: '1.0.0' },

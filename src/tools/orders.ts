@@ -462,6 +462,8 @@ registerGroup({
         type: 'object',
         properties: {
           order_id: { type: 'integer', description: 'Order ID' },
+          page: { type: 'integer', description: 'Page number' },
+          per_page: { type: 'integer', description: 'Items per page (max 100)', default: 10 },
         },
         required: ['order_id'],
       },
@@ -469,8 +471,20 @@ registerGroup({
         try {
           const client = getClient();
           const { order_id, ...params } = args;
-          const { data } = await client.get(`orders/${order_id}/refunds`, params);
-          return { content: [{ type: 'text', text: JSON.stringify({ refunds: data }, null, 2) }] };
+          const { data, headers } = await client.get(`orders/${order_id}/refunds`, params);
+          const pagination = extractPagination(headers as Record<string, string | undefined>);
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(
+                  { refunds: data, total: pagination.total, totalPages: pagination.totalPages },
+                  null,
+                  2,
+                ),
+              },
+            ],
+          };
         } catch (error) {
           return {
             content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],

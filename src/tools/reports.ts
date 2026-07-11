@@ -236,7 +236,7 @@ registerGroup({
         try {
           const client = getClient();
           const params: Record<string, unknown> = { ...args };
-          const { data } = await client.get('reports/revenue/stat', params);
+          const { data } = await client.get('reports/revenue/stats', params);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
         } catch (error) {
           return {

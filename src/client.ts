@@ -50,12 +50,11 @@ function createClient(): WooCommerceClient {
     consumerSecret: config.consumerSecret,
     version: 'wc/v3',
     timeout: config.timeout,
-    queryStringAuth: true,
   };
 
-  return new (
-    WooCommerceRestApi as unknown as new (opt: IWooCommerceRestApiOptions) => WooCommerceClient
-  )(options);
+  return new (WooCommerceRestApi as unknown as new (
+    opt: IWooCommerceRestApiOptions,
+  ) => WooCommerceClient)(options);
 }
 
 export function getClient(): WooCommerceClient {

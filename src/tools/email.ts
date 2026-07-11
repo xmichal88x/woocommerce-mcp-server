@@ -1,7 +1,6 @@
 import nodemailer from 'nodemailer';
 import type { Transporter } from 'nodemailer';
 import { registerGroup } from '../groups.js';
-import { getClient } from '../client.js';
 import { safeError } from '../errors.js';
 
 let transporter: Transporter | null = null;
@@ -12,6 +11,7 @@ function getTransporter(): Transporter {
       host: process.env.SMTP_HOST,
       port: parseInt(process.env.SMTP_PORT || '587', 10),
       secure: process.env.SMTP_PORT === '465',
+      requireTLS: true,
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
