@@ -1,27 +1,9 @@
+import { z } from 'zod';
 import { registerGroup } from '../groups.js';
 import { getClient, isReadOnly } from '../client.js';
-import { safeError } from '../errors.js';
-import { extractPagination } from '../types.js';
 
-function readOnlyError() {
-  return {
-    content: [
-      {
-        type: 'text' as const,
-        text: JSON.stringify(
-          {
-            code: 'READ_ONLY',
-            message: 'Server is in read-only mode. This operation is not allowed.',
-            actionable: false,
-          },
-          null,
-          2,
-        ),
-      },
-    ],
-    isError: true,
-  };
-}
+import { extractPagination } from '../types.js';
+import { makeListHandler, readOnlyError, validateArgs, withErrorHandling } from '../utils.js';
 
 registerGroup({
   name: 'products',
@@ -60,31 +42,27 @@ registerGroup({
           },
         },
       },
-      handler: async (args) => {
-        try {
-          const client = getClient();
-          const params: Record<string, unknown> = { ...args };
-          const { data, headers } = await client.get('products', params);
-          const pagination = extractPagination(headers as Record<string, string | undefined>);
-          return {
-            content: [
-              {
-                type: 'text',
-                text: JSON.stringify(
-                  { products: data, total: pagination.total, totalPages: pagination.totalPages },
-                  null,
-                  2,
-                ),
-              },
-            ],
-          };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
-      },
+      handler: makeListHandler(
+        'products',
+        z.object({
+          page: z.number().int().optional(),
+          per_page: z.number().int().optional(),
+          search: z.string().optional(),
+          status: z.enum(['draft', 'pending', 'private', 'publish', 'any']).optional(),
+          category: z.number().int().optional(),
+          tag: z.number().int().optional(),
+          sku: z.string().optional(),
+          orderby: z
+            .enum(['date', 'id', 'title', 'slug', 'price', 'popularity', 'rating'])
+            .optional(),
+          order: z.enum(['asc', 'desc']).optional(),
+          min_price: z.string().optional(),
+          max_price: z.string().optional(),
+          on_sale: z.boolean().optional(),
+          stock_status: z.enum(['instock', 'outofstock', 'onbackorder']).optional(),
+        }),
+        'products',
+      ),
     },
     {
       name: 'products_get',
@@ -96,18 +74,13 @@ registerGroup({
         },
         required: ['id'],
       },
-      handler: async (args) => {
-        try {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          const v = validateArgs(z.object({ id: z.number().int().positive() }), args);
           const client = getClient();
-          const { data } = await client.get(`products/${args.id}`, {});
+          const { data } = await client.get(`products/${v.id}`, {});
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
-      },
+        }),
     },
     {
       name: 'products_create',
@@ -173,16 +146,38 @@ registerGroup({
       },
       handler: async (args) => {
         if (isReadOnly()) return readOnlyError();
-        try {
+        return withErrorHandling(async () => {
+          const v = validateArgs(
+            z.object({
+              name: z.string().min(1),
+              type: z.enum(['simple', 'grouped', 'external', 'variable']).optional(),
+              regular_price: z.string().optional(),
+              sale_price: z.string().optional(),
+              description: z.string().optional(),
+              short_description: z.string().optional(),
+              sku: z.string().optional(),
+              stock_quantity: z.number().int().optional(),
+              stock_status: z.enum(['instock', 'outofstock', 'onbackorder']).optional(),
+              categories: z.array(z.object({ id: z.number().int() })).optional(),
+              tags: z.array(z.object({ id: z.number().int() })).optional(),
+              images: z.array(z.object({ src: z.string() })).optional(),
+              attributes: z.array(z.object({}).passthrough()).optional(),
+              weight: z.string().optional(),
+              dimensions: z
+                .object({
+                  length: z.string().optional(),
+                  width: z.string().optional(),
+                  height: z.string().optional(),
+                })
+                .optional(),
+              meta_data: z.array(z.object({ key: z.string(), value: z.unknown() })).optional(),
+            }),
+            args,
+          );
           const client = getClient();
-          const { data } = await client.post('products', args);
+          const { data } = await client.post('products', v);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
+        });
       },
     },
     {
@@ -221,7 +216,13 @@ registerGroup({
           },
           images: {
             type: 'array',
-            items: { type: 'object', properties: { src: { type: 'string' } } },
+            items: {
+              type: 'object',
+              properties: {
+                src: { type: 'string' },
+                id: { type: 'integer' },
+              },
+            },
             description: 'Product images',
           },
           attributes: {
@@ -244,22 +245,64 @@ registerGroup({
             items: { type: 'object', properties: { key: { type: 'string' }, value: {} } },
             description: 'Meta data',
           },
+          cross_sell_ids: {
+            type: 'array',
+            items: { type: 'integer' },
+            description: 'Cross-sell product IDs',
+          },
+          upsell_ids: {
+            type: 'array',
+            items: { type: 'integer' },
+            description: 'Upsell product IDs',
+          },
         },
         required: ['id'],
       },
       handler: async (args) => {
         if (isReadOnly()) return readOnlyError();
-        try {
+        return withErrorHandling(async () => {
+          const v = validateArgs(
+            z.object({
+              id: z.number().int().positive(),
+              name: z.string().min(1).optional(),
+              type: z.enum(['simple', 'grouped', 'external', 'variable']).optional(),
+              regular_price: z.string().optional(),
+              sale_price: z.string().optional(),
+              description: z.string().optional(),
+              short_description: z.string().optional(),
+              sku: z.string().optional(),
+              stock_quantity: z.number().int().optional(),
+              stock_status: z.enum(['instock', 'outofstock', 'onbackorder']).optional(),
+              categories: z.array(z.object({ id: z.number().int() })).optional(),
+              tags: z.array(z.object({ id: z.number().int() })).optional(),
+              images: z
+                .array(
+                  z.object({
+                    src: z.string().optional(),
+                    id: z.number().int().positive().optional(),
+                  }),
+                )
+                .optional(),
+              cross_sell_ids: z.array(z.number().int().positive()).optional(),
+              upsell_ids: z.array(z.number().int().positive()).optional(),
+              attributes: z.array(z.object({}).passthrough()).optional(),
+              weight: z.string().optional(),
+              dimensions: z
+                .object({
+                  length: z.string().optional(),
+                  width: z.string().optional(),
+                  height: z.string().optional(),
+                })
+                .optional(),
+              meta_data: z.array(z.object({ key: z.string(), value: z.unknown() })).optional(),
+            }),
+            args,
+          );
           const client = getClient();
-          const { id, ...data } = args;
+          const { id, ...data } = v;
           const { data: result } = await client.put(`products/${id}`, data);
           return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
+        });
       },
     },
     {
@@ -275,18 +318,20 @@ registerGroup({
       },
       handler: async (args) => {
         if (isReadOnly()) return readOnlyError();
-        try {
+        return withErrorHandling(async () => {
+          const v = validateArgs(
+            z.object({
+              id: z.number().int().positive(),
+              force: z.boolean().optional(),
+            }),
+            args,
+          );
           const client = getClient();
           const params: Record<string, unknown> = {};
-          if (args.force !== undefined) params.force = args.force;
-          const { data } = await client.delete(`products/${args.id}`, params);
+          if (v.force !== undefined) params.force = v.force;
+          const { data } = await client.delete(`products/${v.id}`, params);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
+        });
       },
     },
     {
@@ -314,16 +359,19 @@ registerGroup({
       },
       handler: async (args) => {
         if (isReadOnly()) return readOnlyError();
-        try {
+        return withErrorHandling(async () => {
+          const v = validateArgs(
+            z.object({
+              create: z.array(z.object({}).passthrough()).optional(),
+              update: z.array(z.object({}).passthrough()).optional(),
+              delete: z.array(z.number().int()).optional(),
+            }),
+            args,
+          );
           const client = getClient();
-          const { data } = await client.post('products/batch', args);
+          const { data } = await client.post('products/batch', v);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
+        });
       },
     },
 
@@ -340,12 +388,20 @@ registerGroup({
         },
         required: ['product_id'],
       },
-      handler: async (args) => {
-        try {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          const v = validateArgs(
+            z.object({
+              product_id: z.number().int().positive(),
+              page: z.number().int().optional(),
+              per_page: z.number().int().optional(),
+            }),
+            args,
+          );
           const client = getClient();
-          const { product_id, ...params } = args;
+          const { product_id, ...params } = v;
           const { data, headers } = await client.get(`products/${product_id}/variations`, params);
-          const pagination = extractPagination(headers as Record<string, string | undefined>);
+          const pagination = extractPagination(headers);
           return {
             content: [
               {
@@ -358,13 +414,7 @@ registerGroup({
               },
             ],
           };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
-      },
+        }),
     },
     {
       name: 'products_variations_get',
@@ -377,21 +427,22 @@ registerGroup({
         },
         required: ['product_id', 'variation_id'],
       },
-      handler: async (args) => {
-        try {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          const v = validateArgs(
+            z.object({
+              product_id: z.number().int().positive(),
+              variation_id: z.number().int().positive(),
+            }),
+            args,
+          );
           const client = getClient();
           const { data } = await client.get(
-            `products/${args.product_id}/variations/${args.variation_id}`,
+            `products/${v.product_id}/variations/${v.variation_id}`,
             {},
           );
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
-      },
+        }),
     },
     {
       name: 'products_variations_create',
@@ -443,17 +494,40 @@ registerGroup({
       },
       handler: async (args) => {
         if (isReadOnly()) return readOnlyError();
-        try {
+        return withErrorHandling(async () => {
+          const v = validateArgs(
+            z.object({
+              product_id: z.number().int().positive(),
+              regular_price: z.string().optional(),
+              sale_price: z.string().optional(),
+              sku: z.string().optional(),
+              stock_quantity: z.number().int().optional(),
+              stock_status: z.enum(['instock', 'outofstock', 'onbackorder']).optional(),
+              weight: z.string().optional(),
+              dimensions: z
+                .object({
+                  length: z.string().optional(),
+                  width: z.string().optional(),
+                  height: z.string().optional(),
+                })
+                .optional(),
+              attributes: z.array(z.object({}).passthrough()).optional(),
+              image: z
+                .object({
+                  src: z.string().optional(),
+                  alt: z.string().optional(),
+                  name: z.string().optional(),
+                })
+                .optional(),
+              meta_data: z.array(z.object({ key: z.string(), value: z.unknown() })).optional(),
+            }),
+            args,
+          );
           const client = getClient();
-          const { product_id, ...data } = args;
+          const { product_id, ...data } = v;
           const { data: result } = await client.post(`products/${product_id}/variations`, data);
           return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
+        });
       },
     },
     {
@@ -507,20 +581,44 @@ registerGroup({
       },
       handler: async (args) => {
         if (isReadOnly()) return readOnlyError();
-        try {
+        return withErrorHandling(async () => {
+          const v = validateArgs(
+            z.object({
+              product_id: z.number().int().positive(),
+              variation_id: z.number().int().positive(),
+              regular_price: z.string().optional(),
+              sale_price: z.string().optional(),
+              sku: z.string().optional(),
+              stock_quantity: z.number().int().optional(),
+              stock_status: z.enum(['instock', 'outofstock', 'onbackorder']).optional(),
+              weight: z.string().optional(),
+              dimensions: z
+                .object({
+                  length: z.string().optional(),
+                  width: z.string().optional(),
+                  height: z.string().optional(),
+                })
+                .optional(),
+              attributes: z.array(z.object({}).passthrough()).optional(),
+              image: z
+                .object({
+                  src: z.string().optional(),
+                  alt: z.string().optional(),
+                  name: z.string().optional(),
+                })
+                .optional(),
+              meta_data: z.array(z.object({ key: z.string(), value: z.unknown() })).optional(),
+            }),
+            args,
+          );
           const client = getClient();
-          const { product_id, variation_id, ...data } = args;
+          const { product_id, variation_id, ...data } = v;
           const { data: result } = await client.put(
             `products/${product_id}/variations/${variation_id}`,
             data,
           );
           return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
+        });
       },
     },
     {
@@ -537,21 +635,24 @@ registerGroup({
       },
       handler: async (args) => {
         if (isReadOnly()) return readOnlyError();
-        try {
+        return withErrorHandling(async () => {
+          const v = validateArgs(
+            z.object({
+              product_id: z.number().int().positive(),
+              variation_id: z.number().int().positive(),
+              force: z.boolean().optional(),
+            }),
+            args,
+          );
           const client = getClient();
           const params: Record<string, unknown> = {};
-          if (args.force !== undefined) params.force = args.force;
+          if (v.force !== undefined) params.force = v.force;
           const { data } = await client.delete(
-            `products/${args.product_id}/variations/${args.variation_id}`,
+            `products/${v.product_id}/variations/${v.variation_id}`,
             params,
           );
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
+        });
       },
     },
 
@@ -568,31 +669,16 @@ registerGroup({
           hide_empty: { type: 'boolean', description: 'Hide empty categories' },
         },
       },
-      handler: async (args) => {
-        try {
-          const client = getClient();
-          const params: Record<string, unknown> = { ...args };
-          const { data, headers } = await client.get('products/categories', params);
-          const pagination = extractPagination(headers as Record<string, string | undefined>);
-          return {
-            content: [
-              {
-                type: 'text',
-                text: JSON.stringify(
-                  { categories: data, total: pagination.total, totalPages: pagination.totalPages },
-                  null,
-                  2,
-                ),
-              },
-            ],
-          };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
-      },
+      handler: makeListHandler(
+        'products/categories',
+        z.object({
+          page: z.number().int().optional(),
+          per_page: z.number().int().optional(),
+          search: z.string().optional(),
+          hide_empty: z.boolean().optional(),
+        }),
+        'categories',
+      ),
     },
     {
       name: 'products_categories_get',
@@ -604,18 +690,13 @@ registerGroup({
         },
         required: ['id'],
       },
-      handler: async (args) => {
-        try {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          const v = validateArgs(z.object({ id: z.number().int().positive() }), args);
           const client = getClient();
-          const { data } = await client.get(`products/categories/${args.id}`, {});
+          const { data } = await client.get(`products/categories/${v.id}`, {});
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
-      },
+        }),
     },
     {
       name: 'products_categories_create',
@@ -637,16 +718,26 @@ registerGroup({
       },
       handler: async (args) => {
         if (isReadOnly()) return readOnlyError();
-        try {
+        return withErrorHandling(async () => {
+          const v = validateArgs(
+            z.object({
+              name: z.string().min(1),
+              slug: z.string().optional(),
+              description: z.string().optional(),
+              parent: z.number().int().optional(),
+              image: z
+                .object({
+                  src: z.string().optional(),
+                  alt: z.string().optional(),
+                })
+                .optional(),
+            }),
+            args,
+          );
           const client = getClient();
-          const { data } = await client.post('products/categories', args);
+          const { data } = await client.post('products/categories', v);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
+        });
       },
     },
     {
@@ -670,17 +761,28 @@ registerGroup({
       },
       handler: async (args) => {
         if (isReadOnly()) return readOnlyError();
-        try {
+        return withErrorHandling(async () => {
+          const v = validateArgs(
+            z.object({
+              id: z.number().int().positive(),
+              name: z.string().min(1).optional(),
+              slug: z.string().optional(),
+              description: z.string().optional(),
+              parent: z.number().int().optional(),
+              image: z
+                .object({
+                  src: z.string().optional(),
+                  alt: z.string().optional(),
+                })
+                .optional(),
+            }),
+            args,
+          );
           const client = getClient();
-          const { id, ...data } = args;
+          const { id, ...data } = v;
           const { data: result } = await client.put(`products/categories/${id}`, data);
           return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
+        });
       },
     },
     {
@@ -696,18 +798,20 @@ registerGroup({
       },
       handler: async (args) => {
         if (isReadOnly()) return readOnlyError();
-        try {
+        return withErrorHandling(async () => {
+          const v = validateArgs(
+            z.object({
+              id: z.number().int().positive(),
+              force: z.boolean().optional(),
+            }),
+            args,
+          );
           const client = getClient();
           const params: Record<string, unknown> = {};
-          if (args.force !== undefined) params.force = args.force;
-          const { data } = await client.delete(`products/categories/${args.id}`, params);
+          if (v.force !== undefined) params.force = v.force;
+          const { data } = await client.delete(`products/categories/${v.id}`, params);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
+        });
       },
     },
 
@@ -730,31 +834,18 @@ registerGroup({
           hide_empty: { type: 'boolean', description: 'Hide empty tags' },
         },
       },
-      handler: async (args) => {
-        try {
-          const client = getClient();
-          const params: Record<string, unknown> = { ...args };
-          const { data, headers } = await client.get('products/tags', params);
-          const pagination = extractPagination(headers as Record<string, string | undefined>);
-          return {
-            content: [
-              {
-                type: 'text',
-                text: JSON.stringify(
-                  { tags: data, total: pagination.total, totalPages: pagination.totalPages },
-                  null,
-                  2,
-                ),
-              },
-            ],
-          };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
-      },
+      handler: makeListHandler(
+        'products/tags',
+        z.object({
+          page: z.number().int().optional(),
+          per_page: z.number().int().optional(),
+          search: z.string().optional(),
+          orderby: z.enum(['id', 'name', 'slug', 'count']).optional(),
+          order: z.enum(['asc', 'desc']).optional(),
+          hide_empty: z.boolean().optional(),
+        }),
+        'tags',
+      ),
     },
     {
       name: 'products_tags_get',
@@ -766,18 +857,13 @@ registerGroup({
         },
         required: ['id'],
       },
-      handler: async (args) => {
-        try {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          const v = validateArgs(z.object({ id: z.number().int().positive() }), args);
           const client = getClient();
-          const { data } = await client.get(`products/tags/${args.id}`, {});
+          const { data } = await client.get(`products/tags/${v.id}`, {});
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
-      },
+        }),
     },
     {
       name: 'products_tags_create',
@@ -793,16 +879,19 @@ registerGroup({
       },
       handler: async (args) => {
         if (isReadOnly()) return readOnlyError();
-        try {
+        return withErrorHandling(async () => {
+          const v = validateArgs(
+            z.object({
+              name: z.string().min(1),
+              slug: z.string().optional(),
+              description: z.string().optional(),
+            }),
+            args,
+          );
           const client = getClient();
-          const { data } = await client.post('products/tags', args);
+          const { data } = await client.post('products/tags', v);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
+        });
       },
     },
     {
@@ -820,17 +909,21 @@ registerGroup({
       },
       handler: async (args) => {
         if (isReadOnly()) return readOnlyError();
-        try {
+        return withErrorHandling(async () => {
+          const v = validateArgs(
+            z.object({
+              id: z.number().int().positive(),
+              name: z.string().min(1).optional(),
+              slug: z.string().optional(),
+              description: z.string().optional(),
+            }),
+            args,
+          );
           const client = getClient();
-          const { id, ...data } = args;
+          const { id, ...data } = v;
           const { data: result } = await client.put(`products/tags/${id}`, data);
           return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
+        });
       },
     },
     {
@@ -846,18 +939,20 @@ registerGroup({
       },
       handler: async (args) => {
         if (isReadOnly()) return readOnlyError();
-        try {
+        return withErrorHandling(async () => {
+          const v = validateArgs(
+            z.object({
+              id: z.number().int().positive(),
+              force: z.boolean().optional(),
+            }),
+            args,
+          );
           const client = getClient();
           const params: Record<string, unknown> = {};
-          if (args.force !== undefined) params.force = args.force;
-          const { data } = await client.delete(`products/tags/${args.id}`, params);
+          if (v.force !== undefined) params.force = v.force;
+          const { data } = await client.delete(`products/tags/${v.id}`, params);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
+        });
       },
     },
 
@@ -879,31 +974,17 @@ registerGroup({
           order: { type: 'string', enum: ['asc', 'desc'], description: 'Sort direction' },
         },
       },
-      handler: async (args) => {
-        try {
-          const client = getClient();
-          const params: Record<string, unknown> = { ...args };
-          const { data, headers } = await client.get('products/attributes', params);
-          const pagination = extractPagination(headers as Record<string, string | undefined>);
-          return {
-            content: [
-              {
-                type: 'text',
-                text: JSON.stringify(
-                  { attributes: data, total: pagination.total, totalPages: pagination.totalPages },
-                  null,
-                  2,
-                ),
-              },
-            ],
-          };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
-      },
+      handler: makeListHandler(
+        'products/attributes',
+        z.object({
+          page: z.number().int().optional(),
+          per_page: z.number().int().optional(),
+          search: z.string().optional(),
+          orderby: z.enum(['id', 'name', 'slug', 'count']).optional(),
+          order: z.enum(['asc', 'desc']).optional(),
+        }),
+        'attributes',
+      ),
     },
     {
       name: 'products_attributes_get',
@@ -915,18 +996,13 @@ registerGroup({
         },
         required: ['id'],
       },
-      handler: async (args) => {
-        try {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          const v = validateArgs(z.object({ id: z.number().int().positive() }), args);
           const client = getClient();
-          const { data } = await client.get(`products/attributes/${args.id}`, {});
+          const { data } = await client.get(`products/attributes/${v.id}`, {});
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
-      },
+        }),
     },
     {
       name: 'products_attributes_create',
@@ -953,16 +1029,21 @@ registerGroup({
       },
       handler: async (args) => {
         if (isReadOnly()) return readOnlyError();
-        try {
+        return withErrorHandling(async () => {
+          const v = validateArgs(
+            z.object({
+              name: z.string().min(1),
+              slug: z.string().optional(),
+              type: z.enum(['select', 'text']).optional(),
+              order_by: z.enum(['menu_order', 'name', 'name_num', 'id']).optional(),
+              has_archives: z.boolean().optional(),
+            }),
+            args,
+          );
           const client = getClient();
-          const { data } = await client.post('products/attributes', args);
+          const { data } = await client.post('products/attributes', v);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
+        });
       },
     },
     {
@@ -986,17 +1067,23 @@ registerGroup({
       },
       handler: async (args) => {
         if (isReadOnly()) return readOnlyError();
-        try {
+        return withErrorHandling(async () => {
+          const v = validateArgs(
+            z.object({
+              id: z.number().int().positive(),
+              name: z.string().min(1).optional(),
+              slug: z.string().optional(),
+              type: z.enum(['select', 'text']).optional(),
+              order_by: z.enum(['menu_order', 'name', 'name_num', 'id']).optional(),
+              has_archives: z.boolean().optional(),
+            }),
+            args,
+          );
           const client = getClient();
-          const { id, ...data } = args;
+          const { id, ...data } = v;
           const { data: result } = await client.put(`products/attributes/${id}`, data);
           return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
+        });
       },
     },
     {
@@ -1012,18 +1099,20 @@ registerGroup({
       },
       handler: async (args) => {
         if (isReadOnly()) return readOnlyError();
-        try {
+        return withErrorHandling(async () => {
+          const v = validateArgs(
+            z.object({
+              id: z.number().int().positive(),
+              force: z.boolean().optional(),
+            }),
+            args,
+          );
           const client = getClient();
           const params: Record<string, unknown> = {};
-          if (args.force !== undefined) params.force = args.force;
-          const { data } = await client.delete(`products/attributes/${args.id}`, params);
+          if (v.force !== undefined) params.force = v.force;
+          const { data } = await client.delete(`products/attributes/${v.id}`, params);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
+        });
       },
     },
     {
@@ -1046,15 +1135,27 @@ registerGroup({
         },
         required: ['attribute_id'],
       },
-      handler: async (args) => {
-        try {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          const v = validateArgs(
+            z.object({
+              attribute_id: z.number().int().positive(),
+              page: z.number().int().optional(),
+              per_page: z.number().int().optional(),
+              search: z.string().optional(),
+              orderby: z.enum(['id', 'name', 'slug', 'count']).optional(),
+              order: z.enum(['asc', 'desc']).optional(),
+              hide_empty: z.boolean().optional(),
+            }),
+            args,
+          );
           const client = getClient();
-          const { attribute_id, ...params } = args;
+          const { attribute_id, ...params } = v;
           const { data, headers } = await client.get(
             `products/attributes/${attribute_id}/terms`,
             params,
           );
-          const pagination = extractPagination(headers as Record<string, string | undefined>);
+          const pagination = extractPagination(headers);
           return {
             content: [
               {
@@ -1067,13 +1168,7 @@ registerGroup({
               },
             ],
           };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
-      },
+        }),
     },
     {
       name: 'products_attributes_terms_create',
@@ -1090,20 +1185,24 @@ registerGroup({
       },
       handler: async (args) => {
         if (isReadOnly()) return readOnlyError();
-        try {
+        return withErrorHandling(async () => {
+          const v = validateArgs(
+            z.object({
+              attribute_id: z.number().int().positive(),
+              name: z.string().min(1),
+              slug: z.string().optional(),
+              description: z.string().optional(),
+            }),
+            args,
+          );
           const client = getClient();
-          const { attribute_id, ...data } = args;
+          const { attribute_id, ...data } = v;
           const { data: result } = await client.post(
             `products/attributes/${attribute_id}/terms`,
             data,
           );
           return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
+        });
       },
     },
 
@@ -1131,31 +1230,19 @@ registerGroup({
           order: { type: 'string', enum: ['asc', 'desc'], description: 'Sort direction' },
         },
       },
-      handler: async (args) => {
-        try {
-          const client = getClient();
-          const params: Record<string, unknown> = { ...args };
-          const { data, headers } = await client.get('products/reviews', params);
-          const pagination = extractPagination(headers as Record<string, string | undefined>);
-          return {
-            content: [
-              {
-                type: 'text',
-                text: JSON.stringify(
-                  { reviews: data, total: pagination.total, totalPages: pagination.totalPages },
-                  null,
-                  2,
-                ),
-              },
-            ],
-          };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
-      },
+      handler: makeListHandler(
+        'products/reviews',
+        z.object({
+          page: z.number().int().optional(),
+          per_page: z.number().int().optional(),
+          search: z.string().optional(),
+          product: z.number().int().optional(),
+          status: z.enum(['approved', 'hold', 'spam', 'unspam', 'trash', 'all']).optional(),
+          orderby: z.enum(['date', 'id', 'product', 'rating']).optional(),
+          order: z.enum(['asc', 'desc']).optional(),
+        }),
+        'reviews',
+      ),
     },
     {
       name: 'products_reviews_get',
@@ -1167,18 +1254,13 @@ registerGroup({
         },
         required: ['id'],
       },
-      handler: async (args) => {
-        try {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          const v = validateArgs(z.object({ id: z.number().int().positive() }), args);
           const client = getClient();
-          const { data } = await client.get(`products/reviews/${args.id}`, {});
+          const { data } = await client.get(`products/reviews/${v.id}`, {});
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
-      },
+        }),
     },
     {
       name: 'products_reviews_create',
@@ -1196,16 +1278,21 @@ registerGroup({
       },
       handler: async (args) => {
         if (isReadOnly()) return readOnlyError();
-        try {
+        return withErrorHandling(async () => {
+          const v = validateArgs(
+            z.object({
+              product_id: z.number().int().positive(),
+              review: z.string().min(1),
+              reviewer: z.string().min(1),
+              reviewer_email: z.string().email(),
+              rating: z.number().int().min(1).max(5).optional(),
+            }),
+            args,
+          );
           const client = getClient();
-          const { data } = await client.post('products/reviews', args);
+          const { data } = await client.post('products/reviews', v);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
+        });
       },
     },
   ],

@@ -1,27 +1,43 @@
+import { z } from 'zod';
 import { registerGroup } from '../groups.js';
 import { getClient, isReadOnly } from '../client.js';
-import { safeError } from '../errors.js';
-import { extractPagination } from '../types.js';
 
-function readOnlyError() {
-  return {
-    content: [
-      {
-        type: 'text' as const,
-        text: JSON.stringify(
-          {
-            code: 'READ_ONLY',
-            message: 'Server is in read-only mode. This operation is not allowed.',
-            actionable: false,
-          },
-          null,
-          2,
-        ),
-      },
-    ],
-    isError: true,
-  };
-}
+import { extractPagination } from '../types.js';
+import { makeListHandler, readOnlyError, validateArgs, withErrorHandling } from '../utils.js';
+import { billingSchema, shippingSchema, metaDataSchema } from '../schemas.js';
+
+const lineItemSchema = z.object({
+  product_id: z.number().int().optional(),
+  variation_id: z.number().int().optional(),
+  quantity: z.number().int().optional(),
+  price: z.string().optional(),
+});
+
+const shippingLineSchema = z.object({
+  method_id: z.string().optional(),
+  method_title: z.string().optional(),
+  total: z.string().optional(),
+});
+
+const couponLineSchema = z.object({
+  code: z.string().optional(),
+});
+
+const orderOptionalFields = {
+  customer_id: z.number().int().optional(),
+  payment_method: z.string().optional(),
+  payment_method_title: z.string().optional(),
+  set_paid: z.boolean().optional(),
+  status: z.string().optional(),
+  currency: z.string().optional(),
+  customer_note: z.string().optional(),
+  billing: billingSchema.optional(),
+  shipping: shippingSchema.optional(),
+  line_items: z.array(lineItemSchema).optional(),
+  shipping_lines: z.array(shippingLineSchema).optional(),
+  coupon_lines: z.array(couponLineSchema).optional(),
+  meta_data: z.array(metaDataSchema).optional(),
+};
 
 registerGroup({
   name: 'orders',
@@ -59,31 +75,22 @@ registerGroup({
           order: { type: 'string', enum: ['asc', 'desc'], description: 'Sort direction' },
         },
       },
-      handler: async (args) => {
-        try {
-          const client = getClient();
-          const params: Record<string, unknown> = { ...args };
-          const { data, headers } = await client.get('orders', params);
-          const pagination = extractPagination(headers as Record<string, string | undefined>);
-          return {
-            content: [
-              {
-                type: 'text',
-                text: JSON.stringify(
-                  { orders: data, total: pagination.total, totalPages: pagination.totalPages },
-                  null,
-                  2,
-                ),
-              },
-            ],
-          };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
-      },
+      handler: makeListHandler(
+        'orders',
+        z.object({
+          page: z.number().int().optional(),
+          per_page: z.number().int().optional(),
+          search: z.string().optional(),
+          after: z.string().optional(),
+          before: z.string().optional(),
+          status: z.string().optional(),
+          customer: z.number().int().optional(),
+          product: z.number().int().optional(),
+          orderby: z.enum(['date', 'id', 'title', 'slug', 'total']).optional(),
+          order: z.enum(['asc', 'desc']).optional(),
+        }),
+        'orders',
+      ),
     },
     {
       name: 'orders_get',
@@ -95,18 +102,13 @@ registerGroup({
         },
         required: ['id'],
       },
-      handler: async (args) => {
-        try {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          const v = validateArgs(z.object({ id: z.number().int().positive() }), args);
           const client = getClient();
-          const { data } = await client.get(`orders/${args.id}`, {});
+          const { data } = await client.get(`orders/${v.id}`, {});
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
-      },
+        }),
     },
     {
       name: 'orders_create',
@@ -200,16 +202,12 @@ registerGroup({
       },
       handler: async (args) => {
         if (isReadOnly()) return readOnlyError();
-        try {
+        return withErrorHandling(async () => {
+          const v = validateArgs(z.object(orderOptionalFields), args);
           const client = getClient();
-          const { data } = await client.post('orders', args);
+          const { data } = await client.post('orders', v);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
+        });
       },
     },
     {
@@ -305,17 +303,16 @@ registerGroup({
       },
       handler: async (args) => {
         if (isReadOnly()) return readOnlyError();
-        try {
+        return withErrorHandling(async () => {
+          const v = validateArgs(
+            z.object({ id: z.number().int().positive(), ...orderOptionalFields }),
+            args,
+          );
           const client = getClient();
-          const { id, ...data } = args;
+          const { id, ...data } = v;
           const { data: result } = await client.put(`orders/${id}`, data);
           return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
+        });
       },
     },
     {
@@ -331,18 +328,17 @@ registerGroup({
       },
       handler: async (args) => {
         if (isReadOnly()) return readOnlyError();
-        try {
+        return withErrorHandling(async () => {
+          const v = validateArgs(
+            z.object({ id: z.number().int().positive(), force: z.boolean().optional() }),
+            args,
+          );
           const client = getClient();
           const params: Record<string, unknown> = {};
-          if (args.force !== undefined) params.force = args.force;
-          const { data } = await client.delete(`orders/${args.id}`, params);
+          if (v.force !== undefined) params.force = v.force;
+          const { data } = await client.delete(`orders/${v.id}`, params);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
+        });
       },
     },
     {
@@ -370,16 +366,19 @@ registerGroup({
       },
       handler: async (args) => {
         if (isReadOnly()) return readOnlyError();
-        try {
+        return withErrorHandling(async () => {
+          const v = validateArgs(
+            z.object({
+              create: z.array(z.object({}).passthrough()).optional(),
+              update: z.array(z.object({}).passthrough()).optional(),
+              delete: z.array(z.number().int()).optional(),
+            }),
+            args,
+          );
           const client = getClient();
-          const { data } = await client.post('orders/batch', args);
+          const { data } = await client.post('orders/batch', v);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
+        });
       },
     },
 
@@ -396,12 +395,20 @@ registerGroup({
         },
         required: ['order_id'],
       },
-      handler: async (args) => {
-        try {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          const v = validateArgs(
+            z.object({
+              order_id: z.number().int().positive(),
+              page: z.number().int().optional(),
+              per_page: z.number().int().optional(),
+            }),
+            args,
+          );
           const client = getClient();
-          const { order_id, ...params } = args;
+          const { order_id, ...params } = v;
           const { data, headers } = await client.get(`orders/${order_id}/notes`, params);
-          const pagination = extractPagination(headers as Record<string, string | undefined>);
+          const pagination = extractPagination(headers);
           return {
             content: [
               {
@@ -414,13 +421,7 @@ registerGroup({
               },
             ],
           };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
-      },
+        }),
     },
     {
       name: 'orders_notes_create',
@@ -440,17 +441,20 @@ registerGroup({
       },
       handler: async (args) => {
         if (isReadOnly()) return readOnlyError();
-        try {
+        return withErrorHandling(async () => {
+          const v = validateArgs(
+            z.object({
+              order_id: z.number().int().positive(),
+              note: z.string().min(1),
+              customer_note: z.boolean().optional(),
+            }),
+            args,
+          );
           const client = getClient();
-          const { order_id, ...data } = args;
+          const { order_id, ...data } = v;
           const { data: result } = await client.post(`orders/${order_id}/notes`, data);
           return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
+        });
       },
     },
 
@@ -467,12 +471,20 @@ registerGroup({
         },
         required: ['order_id'],
       },
-      handler: async (args) => {
-        try {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          const v = validateArgs(
+            z.object({
+              order_id: z.number().int().positive(),
+              page: z.number().int().optional(),
+              per_page: z.number().int().optional(),
+            }),
+            args,
+          );
           const client = getClient();
-          const { order_id, ...params } = args;
+          const { order_id, ...params } = v;
           const { data, headers } = await client.get(`orders/${order_id}/refunds`, params);
-          const pagination = extractPagination(headers as Record<string, string | undefined>);
+          const pagination = extractPagination(headers);
           return {
             content: [
               {
@@ -485,13 +497,7 @@ registerGroup({
               },
             ],
           };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
-      },
+        }),
     },
     {
       name: 'orders_refunds_get',
@@ -504,21 +510,19 @@ registerGroup({
         },
         required: ['order_id', 'refund_id'],
       },
-      handler: async (args) => {
-        try {
-          const client = getClient();
-          const { data } = await client.get(
-            `orders/${args.order_id}/refunds/${args.refund_id}`,
-            {},
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          const v = validateArgs(
+            z.object({
+              order_id: z.number().int().positive(),
+              refund_id: z.number().int().positive(),
+            }),
+            args,
           );
+          const client = getClient();
+          const { data } = await client.get(`orders/${v.order_id}/refunds/${v.refund_id}`, {});
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
-      },
+        }),
     },
     {
       name: 'orders_refunds_create',
@@ -568,17 +572,40 @@ registerGroup({
       },
       handler: async (args) => {
         if (isReadOnly()) return readOnlyError();
-        try {
+        return withErrorHandling(async () => {
+          const v = validateArgs(
+            z.object({
+              order_id: z.number().int().positive(),
+              amount: z.string().min(1),
+              reason: z.string().optional(),
+              refund_payment: z.boolean().optional(),
+              api_refund: z.boolean().optional(),
+              line_items: z
+                .array(
+                  z.object({
+                    id: z.number().int().optional(),
+                    quantity: z.number().int().optional(),
+                    refund_total: z.string().optional(),
+                    refund_tax: z
+                      .array(
+                        z.object({
+                          id: z.number().int().optional(),
+                          refund_total: z.string().optional(),
+                        }),
+                      )
+                      .optional(),
+                  }),
+                )
+                .optional(),
+              meta_data: z.array(metaDataSchema).optional(),
+            }),
+            args,
+          );
           const client = getClient();
-          const { order_id, ...data } = args;
+          const { order_id, ...data } = v;
           const { data: result } = await client.post(`orders/${order_id}/refunds`, data);
           return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
+        });
       },
     },
   ],

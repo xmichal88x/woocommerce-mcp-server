@@ -1,27 +1,9 @@
+import { z } from 'zod';
 import { registerGroup } from '../groups.js';
 import { getClient, isReadOnly } from '../client.js';
-import { safeError } from '../errors.js';
-import { extractPagination } from '../types.js';
 
-function readOnlyError() {
-  return {
-    content: [
-      {
-        type: 'text' as const,
-        text: JSON.stringify(
-          {
-            code: 'READ_ONLY',
-            message: 'Server is in read-only mode. This operation is not allowed.',
-            actionable: false,
-          },
-          null,
-          2,
-        ),
-      },
-    ],
-    isError: true,
-  };
-}
+import { extractPagination } from '../types.js';
+import { readOnlyError, validateArgs, withErrorHandling } from '../utils.js';
 
 registerGroup({
   name: 'taxes',
@@ -34,20 +16,14 @@ registerGroup({
         type: 'object',
         properties: {},
       },
-      handler: async (_args) => {
-        try {
+      handler: async (_args) =>
+        withErrorHandling(async () => {
           const client = getClient();
           const { data } = await client.get('taxes/classes', {});
           return {
             content: [{ type: 'text', text: JSON.stringify({ tax_classes: data }, null, 2) }],
           };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
-      },
+        }),
     },
     {
       name: 'taxes_classes_create',
@@ -61,16 +37,12 @@ registerGroup({
       },
       handler: async (args) => {
         if (isReadOnly()) return readOnlyError();
-        try {
+        return withErrorHandling(async () => {
+          const v = validateArgs(z.object({ name: z.string().min(1) }), args);
           const client = getClient();
-          const { data } = await client.post('taxes/classes', args);
+          const { data } = await client.post('taxes/classes', v);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
+        });
       },
     },
     {
@@ -85,16 +57,12 @@ registerGroup({
       },
       handler: async (args) => {
         if (isReadOnly()) return readOnlyError();
-        try {
+        return withErrorHandling(async () => {
+          const v = validateArgs(z.object({ slug: z.string().min(1) }), args);
           const client = getClient();
-          const { data } = await client.delete(`taxes/classes/${args.slug}`, {});
+          const { data } = await client.delete(`taxes/classes/${v.slug}`, {});
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
+        });
       },
     },
 
@@ -112,12 +80,22 @@ registerGroup({
           order: { type: 'string', enum: ['asc', 'desc'], description: 'Sort direction' },
         },
       },
-      handler: async (args) => {
-        try {
+      handler: async (args) =>
+        withErrorHandling(async () => {
           const client = getClient();
-          const params: Record<string, unknown> = { ...args };
+          const v = validateArgs(
+            z.object({
+              page: z.number().int().optional(),
+              per_page: z.number().int().optional(),
+              class: z.string().optional(),
+              orderby: z.enum(['id', 'order', 'name']).optional(),
+              order: z.enum(['asc', 'desc']).optional(),
+            }),
+            args,
+          );
+          const params: Record<string, unknown> = { ...v };
           const { data, headers } = await client.get('taxes/rates', params);
-          const pagination = extractPagination(headers as Record<string, string | undefined>);
+          const pagination = extractPagination(headers);
           return {
             content: [
               {
@@ -130,13 +108,7 @@ registerGroup({
               },
             ],
           };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
-      },
+        }),
     },
     {
       name: 'taxes_rates_get',
@@ -148,18 +120,13 @@ registerGroup({
         },
         required: ['id'],
       },
-      handler: async (args) => {
-        try {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          const v = validateArgs(z.object({ id: z.number().int().positive() }), args);
           const client = getClient();
-          const { data } = await client.get(`taxes/rates/${args.id}`, {});
+          const { data } = await client.get(`taxes/rates/${v.id}`, {});
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
-      },
+        }),
     },
     {
       name: 'taxes_rates_create',
@@ -184,16 +151,28 @@ registerGroup({
       },
       handler: async (args) => {
         if (isReadOnly()) return readOnlyError();
-        try {
+        return withErrorHandling(async () => {
+          const v = validateArgs(
+            z.object({
+              country: z.string().min(1),
+              rate: z.string().min(1),
+              name: z.string().min(1),
+              state: z.string().optional(),
+              postcode: z.string().optional(),
+              city: z.string().optional(),
+              priority: z.number().int().optional(),
+              compound: z.boolean().optional(),
+              shipping: z.boolean().optional(),
+              class: z.string().optional(),
+              postcodes: z.array(z.string()).optional(),
+              cities: z.array(z.string()).optional(),
+            }),
+            args,
+          );
           const client = getClient();
-          const { data } = await client.post('taxes/rates', args);
+          const { data } = await client.post('taxes/rates', v);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
+        });
       },
     },
     {
@@ -220,17 +199,30 @@ registerGroup({
       },
       handler: async (args) => {
         if (isReadOnly()) return readOnlyError();
-        try {
+        return withErrorHandling(async () => {
+          const v = validateArgs(
+            z.object({
+              id: z.number().int().positive(),
+              country: z.string().optional(),
+              state: z.string().optional(),
+              postcode: z.string().optional(),
+              city: z.string().optional(),
+              rate: z.string().optional(),
+              name: z.string().optional(),
+              priority: z.number().int().optional(),
+              compound: z.boolean().optional(),
+              shipping: z.boolean().optional(),
+              class: z.string().optional(),
+              postcodes: z.array(z.string()).optional(),
+              cities: z.array(z.string()).optional(),
+            }),
+            args,
+          );
           const client = getClient();
-          const { id, ...data } = args;
+          const { id, ...data } = v;
           const { data: result } = await client.put(`taxes/rates/${id}`, data);
           return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
+        });
       },
     },
     {
@@ -245,16 +237,12 @@ registerGroup({
       },
       handler: async (args) => {
         if (isReadOnly()) return readOnlyError();
-        try {
+        return withErrorHandling(async () => {
+          const v = validateArgs(z.object({ id: z.number().int().positive() }), args);
           const client = getClient();
-          const { data } = await client.delete(`taxes/rates/${args.id}`, {});
+          const { data } = await client.delete(`taxes/rates/${v.id}`, {});
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
+        });
       },
     },
   ],

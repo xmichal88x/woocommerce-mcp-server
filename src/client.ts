@@ -52,9 +52,41 @@ function createClient(): WooCommerceClient {
     timeout: config.timeout,
   };
 
-  return new (
+  const api = new (
     WooCommerceRestApi as unknown as new (opt: IWooCommerceRestApiOptions) => WooCommerceClient
   )(options);
+
+  if (config.retryCount > 0) {
+    return new Proxy(api, {
+      get(target, prop) {
+        const original = target[prop as keyof WooCommerceClient];
+        if (typeof original !== 'function') return original;
+
+        return async (...args: unknown[]) => {
+          let lastError: unknown;
+          for (let attempt = 0; attempt <= config.retryCount; attempt++) {
+            try {
+              return await Reflect.apply(original, target, args);
+            } catch (error) {
+              const status =
+                (error as { response?: { status?: number } })?.response?.status ??
+                (error as { status?: number })?.status;
+              if (status !== undefined && status >= 400 && status < 500) {
+                throw error;
+              }
+              lastError = error;
+              if (attempt < config.retryCount) {
+                await new Promise((r) => setTimeout(r, Math.pow(2, attempt) * 500));
+              }
+            }
+          }
+          throw lastError;
+        };
+      },
+    });
+  }
+
+  return api;
 }
 
 export function getClient(): WooCommerceClient {
@@ -63,8 +95,17 @@ export function getClient(): WooCommerceClient {
   return client;
 }
 
+let cachedReadOnly: boolean | null = null;
+
 // Check if read-only mode should block mutation
 export function isReadOnly(): boolean {
-  const { readOnly } = getConfig();
-  return readOnly;
+  if (cachedReadOnly === null) {
+    cachedReadOnly = getConfig().readOnly;
+  }
+  return cachedReadOnly;
+}
+
+export function resetClient(): void {
+  client = null;
+  cachedReadOnly = null;
 }

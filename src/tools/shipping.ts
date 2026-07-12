@@ -1,26 +1,7 @@
+import { z } from 'zod';
 import { registerGroup } from '../groups.js';
 import { getClient, isReadOnly } from '../client.js';
-import { safeError } from '../errors.js';
-
-function readOnlyError() {
-  return {
-    content: [
-      {
-        type: 'text' as const,
-        text: JSON.stringify(
-          {
-            code: 'READ_ONLY',
-            message: 'Server is in read-only mode. This operation is not allowed.',
-            actionable: false,
-          },
-          null,
-          2,
-        ),
-      },
-    ],
-    isError: true,
-  };
-}
+import { readOnlyError, validateArgs, withErrorHandling } from '../utils.js';
 
 registerGroup({
   name: 'shipping',
@@ -33,18 +14,12 @@ registerGroup({
         type: 'object',
         properties: {},
       },
-      handler: async () => {
-        try {
+      handler: async (_args: Record<string, unknown>) =>
+        withErrorHandling(async () => {
           const client = getClient();
           const { data } = await client.get('shipping/zones', {});
           return { content: [{ type: 'text', text: JSON.stringify({ zones: data }, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
-      },
+        }),
     },
     {
       name: 'shipping_zones_get',
@@ -56,18 +31,13 @@ registerGroup({
         },
         required: ['id'],
       },
-      handler: async (args) => {
-        try {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          const v = validateArgs(z.object({ id: z.number().int().positive() }), args);
           const client = getClient();
-          const { data } = await client.get(`shipping/zones/${args.id}`, {});
+          const { data } = await client.get(`shipping/zones/${v.id}`, {});
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
-      },
+        }),
     },
     {
       name: 'shipping_zones_create',
@@ -82,16 +52,18 @@ registerGroup({
       },
       handler: async (args) => {
         if (isReadOnly()) return readOnlyError();
-        try {
+        return withErrorHandling(async () => {
+          const v = validateArgs(
+            z.object({
+              name: z.string().min(1),
+              order: z.number().int().optional(),
+            }),
+            args,
+          );
           const client = getClient();
-          const { data } = await client.post('shipping/zones', args);
+          const { data } = await client.post('shipping/zones', v);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
+        });
       },
     },
     {
@@ -108,17 +80,20 @@ registerGroup({
       },
       handler: async (args) => {
         if (isReadOnly()) return readOnlyError();
-        try {
+        return withErrorHandling(async () => {
+          const v = validateArgs(
+            z.object({
+              id: z.number().int().positive(),
+              name: z.string().min(1).optional(),
+              order: z.number().int().optional(),
+            }),
+            args,
+          );
           const client = getClient();
-          const { id, ...data } = args;
+          const { id, ...data } = v;
           const { data: result } = await client.put(`shipping/zones/${id}`, data);
           return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
+        });
       },
     },
     {
@@ -133,16 +108,12 @@ registerGroup({
       },
       handler: async (args) => {
         if (isReadOnly()) return readOnlyError();
-        try {
+        return withErrorHandling(async () => {
+          const v = validateArgs(z.object({ id: z.number().int().positive() }), args);
           const client = getClient();
-          const { data } = await client.delete(`shipping/zones/${args.id}`, {});
+          const { data } = await client.delete(`shipping/zones/${v.id}`, {});
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
+        });
       },
     },
 
@@ -157,19 +128,14 @@ registerGroup({
         },
         required: ['zone_id'],
       },
-      handler: async (args) => {
-        try {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          const v = validateArgs(z.object({ zone_id: z.number().int().positive() }), args);
           const client = getClient();
-          const { zone_id } = args;
+          const { zone_id } = v;
           const { data } = await client.get(`shipping/zones/${zone_id}/methods`, {});
           return { content: [{ type: 'text', text: JSON.stringify({ methods: data }, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
-      },
+        }),
     },
     {
       name: 'shipping_zone_methods_get',
@@ -182,21 +148,22 @@ registerGroup({
         },
         required: ['zone_id', 'method_id'],
       },
-      handler: async (args) => {
-        try {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          const v = validateArgs(
+            z.object({
+              zone_id: z.number().int().positive(),
+              method_id: z.number().int().positive(),
+            }),
+            args,
+          );
           const client = getClient();
           const { data } = await client.get(
-            `shipping/zones/${args.zone_id}/methods/${args.method_id}`,
+            `shipping/zones/${v.zone_id}/methods/${v.method_id}`,
             {},
           );
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
-      },
+        }),
     },
     {
       name: 'shipping_zone_methods_create',
@@ -218,17 +185,23 @@ registerGroup({
       },
       handler: async (args) => {
         if (isReadOnly()) return readOnlyError();
-        try {
+        return withErrorHandling(async () => {
+          const v = validateArgs(
+            z.object({
+              zone_id: z.number().int().positive(),
+              method_id: z.string().min(1),
+              title: z.string().optional(),
+              order: z.number().int().optional(),
+              enabled: z.boolean().optional(),
+              settings: z.record(z.unknown()).optional(),
+            }),
+            args,
+          );
           const client = getClient();
-          const { zone_id, ...data } = args;
+          const { zone_id, ...data } = v;
           const { data: result } = await client.post(`shipping/zones/${zone_id}/methods`, data);
           return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
+        });
       },
     },
     {
@@ -248,20 +221,26 @@ registerGroup({
       },
       handler: async (args) => {
         if (isReadOnly()) return readOnlyError();
-        try {
+        return withErrorHandling(async () => {
+          const v = validateArgs(
+            z.object({
+              zone_id: z.number().int().positive(),
+              method_id: z.number().int().positive(),
+              title: z.string().optional(),
+              order: z.number().int().optional(),
+              enabled: z.boolean().optional(),
+              settings: z.record(z.unknown()).optional(),
+            }),
+            args,
+          );
           const client = getClient();
-          const { zone_id, method_id, ...data } = args;
+          const { zone_id, method_id, ...data } = v;
           const { data: result } = await client.put(
             `shipping/zones/${zone_id}/methods/${method_id}`,
             data,
           );
           return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
+        });
       },
     },
     {
@@ -277,19 +256,21 @@ registerGroup({
       },
       handler: async (args) => {
         if (isReadOnly()) return readOnlyError();
-        try {
+        return withErrorHandling(async () => {
+          const v = validateArgs(
+            z.object({
+              zone_id: z.number().int().positive(),
+              method_id: z.number().int().positive(),
+            }),
+            args,
+          );
           const client = getClient();
           const { data } = await client.delete(
-            `shipping/zones/${args.zone_id}/methods/${args.method_id}`,
+            `shipping/zones/${v.zone_id}/methods/${v.method_id}`,
             {},
           );
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
+        });
       },
     },
 
@@ -304,21 +285,16 @@ registerGroup({
         },
         required: ['zone_id'],
       },
-      handler: async (args) => {
-        try {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          const v = validateArgs(z.object({ zone_id: z.number().int().positive() }), args);
           const client = getClient();
-          const { zone_id } = args;
+          const { zone_id } = v;
           const { data } = await client.get(`shipping/zones/${zone_id}/locations`, {});
           return {
             content: [{ type: 'text', text: JSON.stringify({ locations: data }, null, 2) }],
           };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
-      },
+        }),
     },
   ],
 });

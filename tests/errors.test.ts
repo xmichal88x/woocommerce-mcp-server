@@ -1,10 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import { safeError } from '../src/errors.js';
 
-function makeError(message: string, status?: number): Error {
+function makeError(message: string, status?: number, code?: string): Error {
   const error = new Error(message);
   if (status !== undefined) {
     (error as Record<string, unknown>).response = { status };
+  }
+  if (code !== undefined) {
+    (error as NodeJS.ErrnoException).code = code;
   }
   return error;
 }
@@ -53,20 +56,22 @@ describe('safeError', () => {
   });
 
   it('returns NETWORK_ERROR for ENOTFOUND', () => {
-    const result = safeError(makeError('getaddrinfo ENOTFOUND store.com'));
+    const result = safeError(makeError('getaddrinfo ENOTFOUND store.com', undefined, 'ENOTFOUND'));
     expect(result.code).toBe('NETWORK_ERROR');
     expect(result.message).toContain('Cannot connect');
     expect(result.actionable).toBe(true);
   });
 
   it('returns NETWORK_ERROR for ECONNREFUSED', () => {
-    const result = safeError(makeError('connect ECONNREFUSED store.com'));
+    const result = safeError(
+      makeError('connect ECONNREFUSED store.com', undefined, 'ECONNREFUSED'),
+    );
     expect(result.code).toBe('NETWORK_ERROR');
     expect(result.actionable).toBe(true);
   });
 
   it('returns TIMEOUT for ECONNABORTED in message', () => {
-    const result = safeError(makeError('timeout ECONNABORTED'));
+    const result = safeError(makeError('timeout ECONNABORTED', undefined, 'ECONNABORTED'));
     expect(result.code).toBe('TIMEOUT');
     expect(result.message).toContain('timed out');
     expect(result.actionable).toBe(true);

@@ -31,10 +31,44 @@ export interface WooProduct {
   default_attributes: { id: number; name: string; option: string }[];
   variations: number[];
   grouped_products: number[];
+  cross_sell_ids: number[];
+  upsell_ids: number[];
   meta_data: { id: number; key: string; value: unknown }[];
   date_created: string;
   date_modified: string;
   _links: Record<string, { href: string }[]>;
+  featured: boolean;
+  catalog_visibility: 'visible' | 'catalog' | 'search' | 'hidden';
+  reviews_allowed: boolean;
+  average_rating: string;
+  rating_count: number;
+  manage_stock: boolean;
+  backorders: 'no' | 'notify' | 'yes';
+  backorders_allowed: boolean;
+  backordered: boolean;
+  sold_individually: boolean;
+  shipping_class: string;
+  shipping_class_id: number;
+  downloadable: boolean;
+  downloads: { id: string; name: string; file: string }[];
+  price_html: string;
+  menu_order: number;
+  parent_id: number;
+  related_ids: number[];
+  date_on_sale_from: string | null;
+  date_on_sale_to: string | null;
+  virtual: boolean;
+  weight: string;
+  dimensions: {
+    length: string;
+    width: string;
+    height: string;
+    unit: string;
+  };
+  tax_status: 'taxable' | 'shipping' | 'none';
+  tax_class: string;
+  purchase_note: string;
+  in_stock: boolean;
 }
 
 // Order types
@@ -216,8 +250,14 @@ export interface PaginationInfo {
 export function extractPagination(
   headers: Record<string, string | string[] | undefined>,
 ): PaginationInfo {
+  const total = Array.isArray(headers['x-wp-total'])
+    ? headers['x-wp-total'][0]
+    : headers['x-wp-total'];
+  const totalPages = Array.isArray(headers['x-wp-totalpages'])
+    ? headers['x-wp-totalpages'][0]
+    : headers['x-wp-totalpages'];
   return {
-    total: parseInt(String(headers['x-wp-total'] || '0'), 10),
-    totalPages: parseInt(String(headers['x-wp-totalpages'] || '0'), 10),
+    total: parseInt(String(total || '0'), 10) || 0,
+    totalPages: parseInt(String(totalPages || '0'), 10) || 0,
   };
 }

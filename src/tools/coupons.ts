@@ -1,27 +1,8 @@
+import { z } from 'zod';
 import { registerGroup } from '../groups.js';
 import { getClient, isReadOnly } from '../client.js';
-import { safeError } from '../errors.js';
-import { extractPagination } from '../types.js';
 
-function readOnlyError() {
-  return {
-    content: [
-      {
-        type: 'text' as const,
-        text: JSON.stringify(
-          {
-            code: 'READ_ONLY',
-            message: 'Server is in read-only mode. This operation is not allowed.',
-            actionable: false,
-          },
-          null,
-          2,
-        ),
-      },
-    ],
-    isError: true,
-  };
-}
+import { makeListHandler, readOnlyError, validateArgs, withErrorHandling } from '../utils.js';
 
 registerGroup({
   name: 'coupons',
@@ -48,31 +29,22 @@ registerGroup({
           order: { type: 'string', enum: ['asc', 'desc'], description: 'Sort direction' },
         },
       },
-      handler: async (args) => {
-        try {
-          const client = getClient();
-          const params: Record<string, unknown> = { ...args };
-          const { data, headers } = await client.get('coupons', params);
-          const pagination = extractPagination(headers as Record<string, string | undefined>);
-          return {
-            content: [
-              {
-                type: 'text',
-                text: JSON.stringify(
-                  { coupons: data, total: pagination.total, totalPages: pagination.totalPages },
-                  null,
-                  2,
-                ),
-              },
-            ],
-          };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
-      },
+      handler: makeListHandler(
+        'coupons',
+        z.object({
+          page: z.number().int().optional(),
+          per_page: z.number().int().optional(),
+          search: z.string().optional(),
+          code: z.string().optional(),
+          exclude: z.array(z.number().int()).optional(),
+          include: z.array(z.number().int()).optional(),
+          after: z.string().optional(),
+          before: z.string().optional(),
+          orderby: z.enum(['date', 'id', 'code', 'amount', 'type']).optional(),
+          order: z.enum(['asc', 'desc']).optional(),
+        }),
+        'coupons',
+      ),
     },
     {
       name: 'coupons_get',
@@ -84,18 +56,13 @@ registerGroup({
         },
         required: ['id'],
       },
-      handler: async (args) => {
-        try {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          const v = validateArgs(z.object({ id: z.number().int().positive() }), args);
           const client = getClient();
-          const { data } = await client.get(`coupons/${args.id}`, {});
+          const { data } = await client.get(`coupons/${v.id}`, {});
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
-      },
+        }),
     },
     {
       name: 'coupons_create',
@@ -156,16 +123,35 @@ registerGroup({
       },
       handler: async (args) => {
         if (isReadOnly()) return readOnlyError();
-        try {
+        return withErrorHandling(async () => {
+          const v = validateArgs(
+            z.object({
+              code: z.string().min(1),
+              discount_type: z.enum(['percent', 'fixed_cart', 'fixed_product']).optional(),
+              amount: z.string().optional(),
+              minimum_amount: z.string().optional(),
+              maximum_amount: z.string().optional(),
+              individual_use: z.boolean().optional(),
+              exclude_sale_items: z.boolean().optional(),
+              product_ids: z.array(z.number().int()).optional(),
+              excluded_product_ids: z.array(z.number().int()).optional(),
+              product_categories: z.array(z.number().int()).optional(),
+              excluded_product_categories: z.array(z.number().int()).optional(),
+              usage_limit: z.number().int().optional(),
+              usage_limit_per_user: z.number().int().optional(),
+              limit_usage_to_x_items: z.number().int().optional(),
+              free_shipping: z.boolean().optional(),
+              email_restrictions: z.array(z.string()).optional(),
+              date_expires: z.string().optional(),
+              description: z.string().optional(),
+              meta_data: z.array(z.object({ key: z.string(), value: z.unknown() })).optional(),
+            }),
+            args,
+          );
           const client = getClient();
-          const { data } = await client.post('coupons', args);
+          const { data } = await client.post('coupons', v);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
+        });
       },
     },
     {
@@ -227,17 +213,37 @@ registerGroup({
       },
       handler: async (args) => {
         if (isReadOnly()) return readOnlyError();
-        try {
+        return withErrorHandling(async () => {
+          const v = validateArgs(
+            z.object({
+              id: z.number().int().positive(),
+              code: z.string().min(1).optional(),
+              discount_type: z.enum(['percent', 'fixed_cart', 'fixed_product']).optional(),
+              amount: z.string().optional(),
+              minimum_amount: z.string().optional(),
+              maximum_amount: z.string().optional(),
+              individual_use: z.boolean().optional(),
+              exclude_sale_items: z.boolean().optional(),
+              product_ids: z.array(z.number().int()).optional(),
+              excluded_product_ids: z.array(z.number().int()).optional(),
+              product_categories: z.array(z.number().int()).optional(),
+              excluded_product_categories: z.array(z.number().int()).optional(),
+              usage_limit: z.number().int().optional(),
+              usage_limit_per_user: z.number().int().optional(),
+              limit_usage_to_x_items: z.number().int().optional(),
+              free_shipping: z.boolean().optional(),
+              email_restrictions: z.array(z.string()).optional(),
+              date_expires: z.string().optional(),
+              description: z.string().optional(),
+              meta_data: z.array(z.object({ key: z.string(), value: z.unknown() })).optional(),
+            }),
+            args,
+          );
           const client = getClient();
-          const { id, ...data } = args;
+          const { id, ...data } = v;
           const { data: result } = await client.put(`coupons/${id}`, data);
           return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
+        });
       },
     },
     {
@@ -253,18 +259,20 @@ registerGroup({
       },
       handler: async (args) => {
         if (isReadOnly()) return readOnlyError();
-        try {
+        return withErrorHandling(async () => {
+          const v = validateArgs(
+            z.object({
+              id: z.number().int().positive(),
+              force: z.boolean().optional(),
+            }),
+            args,
+          );
           const client = getClient();
           const params: Record<string, unknown> = {};
-          if (args.force !== undefined) params.force = args.force;
-          const { data } = await client.delete(`coupons/${args.id}`, params);
+          if (v.force !== undefined) params.force = v.force;
+          const { data } = await client.delete(`coupons/${v.id}`, params);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
+        });
       },
     },
     {
@@ -292,16 +300,19 @@ registerGroup({
       },
       handler: async (args) => {
         if (isReadOnly()) return readOnlyError();
-        try {
+        return withErrorHandling(async () => {
+          const v = validateArgs(
+            z.object({
+              create: z.array(z.object({}).passthrough()).optional(),
+              update: z.array(z.object({}).passthrough()).optional(),
+              delete: z.array(z.number().int()).optional(),
+            }),
+            args,
+          );
           const client = getClient();
-          const { data } = await client.post('coupons/batch', args);
+          const { data } = await client.post('coupons/batch', v);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
+        });
       },
     },
   ],

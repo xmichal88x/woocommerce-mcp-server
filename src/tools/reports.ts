@@ -1,6 +1,7 @@
+import { z } from 'zod';
+import { validateArgs, withErrorHandling } from '../utils.js';
 import { registerGroup } from '../groups.js';
 import { getClient } from '../client.js';
-import { safeError } from '../errors.js';
 
 registerGroup({
   name: 'reports',
@@ -24,19 +25,32 @@ registerGroup({
           },
         },
       },
-      handler: async (args) => {
-        try {
+      handler: async (args) =>
+        withErrorHandling(async () => {
           const client = getClient();
-          const params: Record<string, unknown> = { ...args };
+          const v = validateArgs(
+            z.object({
+              date_min: z.string().optional(),
+              date_max: z.string().optional(),
+              period: z
+                .enum([
+                  'year',
+                  'last_month',
+                  'this_month',
+                  'last_week',
+                  'this_week',
+                  '7day',
+                  '30day',
+                ])
+                .optional(),
+              date_context: z.string().optional(),
+            }),
+            args,
+          );
+          const params: Record<string, unknown> = { ...v };
           const { data } = await client.get('reports/sales', params);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
-      },
+        }),
     },
     {
       name: 'reports_top_sellers',
@@ -54,19 +68,32 @@ registerGroup({
           limit: { type: 'integer', description: 'Maximum number of items to return', default: 10 },
         },
       },
-      handler: async (args) => {
-        try {
+      handler: async (args) =>
+        withErrorHandling(async () => {
           const client = getClient();
-          const params: Record<string, unknown> = { ...args };
+          const v = validateArgs(
+            z.object({
+              period: z
+                .enum([
+                  'year',
+                  'last_month',
+                  'this_month',
+                  'last_week',
+                  'this_week',
+                  '7day',
+                  '30day',
+                ])
+                .optional(),
+              date_min: z.string().optional(),
+              date_max: z.string().optional(),
+              limit: z.number().int().optional(),
+            }),
+            args,
+          );
+          const params: Record<string, unknown> = { ...v };
           const { data } = await client.get('reports/top_sellers', params);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
-      },
+        }),
     },
     {
       name: 'reports_products',
@@ -83,19 +110,31 @@ registerGroup({
           date_max: { type: 'string', description: 'End date (YYYY-MM-DD)' },
         },
       },
-      handler: async (args) => {
-        try {
+      handler: async (args) =>
+        withErrorHandling(async () => {
           const client = getClient();
-          const params: Record<string, unknown> = { ...args };
+          const v = validateArgs(
+            z.object({
+              period: z
+                .enum([
+                  'year',
+                  'last_month',
+                  'this_month',
+                  'last_week',
+                  'this_week',
+                  '7day',
+                  '30day',
+                ])
+                .optional(),
+              date_min: z.string().optional(),
+              date_max: z.string().optional(),
+            }),
+            args,
+          );
+          const params: Record<string, unknown> = { ...v };
           const { data } = await client.get('reports/products', params);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
-      },
+        }),
     },
     {
       name: 'reports_orders',
@@ -112,19 +151,31 @@ registerGroup({
           date_max: { type: 'string', description: 'End date (YYYY-MM-DD)' },
         },
       },
-      handler: async (args) => {
-        try {
+      handler: async (args) =>
+        withErrorHandling(async () => {
           const client = getClient();
-          const params: Record<string, unknown> = { ...args };
+          const v = validateArgs(
+            z.object({
+              period: z
+                .enum([
+                  'year',
+                  'last_month',
+                  'this_month',
+                  'last_week',
+                  'this_week',
+                  '7day',
+                  '30day',
+                ])
+                .optional(),
+              date_min: z.string().optional(),
+              date_max: z.string().optional(),
+            }),
+            args,
+          );
+          const params: Record<string, unknown> = { ...v };
           const { data } = await client.get('reports/orders', params);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
-      },
+        }),
     },
     {
       name: 'reports_customers',
@@ -141,19 +192,31 @@ registerGroup({
           date_max: { type: 'string', description: 'End date (YYYY-MM-DD)' },
         },
       },
-      handler: async (args) => {
-        try {
+      handler: async (args) =>
+        withErrorHandling(async () => {
           const client = getClient();
-          const params: Record<string, unknown> = { ...args };
+          const v = validateArgs(
+            z.object({
+              period: z
+                .enum([
+                  'year',
+                  'last_month',
+                  'this_month',
+                  'last_week',
+                  'this_week',
+                  '7day',
+                  '30day',
+                ])
+                .optional(),
+              date_min: z.string().optional(),
+              date_max: z.string().optional(),
+            }),
+            args,
+          );
+          const params: Record<string, unknown> = { ...v };
           const { data } = await client.get('reports/customers', params);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
-      },
+        }),
     },
     {
       name: 'reports_coupons',
@@ -175,19 +238,32 @@ registerGroup({
           },
         },
       },
-      handler: async (args) => {
-        try {
+      handler: async (args) =>
+        withErrorHandling(async () => {
           const client = getClient();
-          const params: Record<string, unknown> = { ...args };
+          const v = validateArgs(
+            z.object({
+              period: z
+                .enum([
+                  'year',
+                  'last_month',
+                  'this_month',
+                  'last_week',
+                  'this_week',
+                  '7day',
+                  '30day',
+                ])
+                .optional(),
+              date_min: z.string().optional(),
+              date_max: z.string().optional(),
+              coupon: z.array(z.string()).optional(),
+            }),
+            args,
+          );
+          const params: Record<string, unknown> = { ...v };
           const { data } = await client.get('reports/coupons', params);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
-      },
+        }),
     },
     {
       name: 'reports_stock',
@@ -203,19 +279,19 @@ registerGroup({
           },
         },
       },
-      handler: async (args) => {
-        try {
+      handler: async (args) =>
+        withErrorHandling(async () => {
           const client = getClient();
-          const params: Record<string, unknown> = { ...args };
+          const v = validateArgs(
+            z.object({
+              type: z.enum(['all', 'low', 'outofstock', 'instock']).optional(),
+            }),
+            args,
+          );
+          const params: Record<string, unknown> = { ...v };
           const { data } = await client.get('reports/stock', params);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
-      },
+        }),
     },
     {
       name: 'reports_revenue',
@@ -232,19 +308,31 @@ registerGroup({
           date_max: { type: 'string', description: 'End date (YYYY-MM-DD)' },
         },
       },
-      handler: async (args) => {
-        try {
+      handler: async (args) =>
+        withErrorHandling(async () => {
           const client = getClient();
-          const params: Record<string, unknown> = { ...args };
+          const v = validateArgs(
+            z.object({
+              period: z
+                .enum([
+                  'year',
+                  'last_month',
+                  'this_month',
+                  'last_week',
+                  'this_week',
+                  '7day',
+                  '30day',
+                ])
+                .optional(),
+              date_min: z.string().optional(),
+              date_max: z.string().optional(),
+            }),
+            args,
+          );
+          const params: Record<string, unknown> = { ...v };
           const { data } = await client.get('reports/revenue/stats', params);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
-      },
+        }),
     },
   ],
 });

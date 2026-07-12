@@ -1,7 +1,9 @@
 import { registerGroup } from '../groups.js';
 import { getClient } from '../client.js';
-import { safeError } from '../errors.js';
+
 import { extractPagination } from '../types.js';
+import { z } from 'zod';
+import { validateArgs, withErrorHandling } from '../utils.js';
 
 registerGroup({
   name: 'system',
@@ -13,18 +15,12 @@ registerGroup({
         type: 'object',
         properties: {},
       },
-      handler: async () => {
-        try {
+      handler: async (_args: Record<string, unknown>) =>
+        withErrorHandling(async () => {
           const client = getClient();
           const { data } = await client.get('system_status', {});
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
-      },
+        }),
     },
     {
       name: 'system_status_tools',
@@ -33,18 +29,12 @@ registerGroup({
         type: 'object',
         properties: {},
       },
-      handler: async () => {
-        try {
+      handler: async (_args: Record<string, unknown>) =>
+        withErrorHandling(async () => {
           const client = getClient();
           const { data } = await client.get('system_status/tools', {});
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
-      },
+        }),
     },
     {
       name: 'system_data',
@@ -53,18 +43,12 @@ registerGroup({
         type: 'object',
         properties: {},
       },
-      handler: async () => {
-        try {
+      handler: async (_args: Record<string, unknown>) =>
+        withErrorHandling(async () => {
           const client = getClient();
           const { data } = await client.get('data', {});
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
-      },
+        }),
     },
     {
       name: 'system_continents',
@@ -73,18 +57,12 @@ registerGroup({
         type: 'object',
         properties: {},
       },
-      handler: async () => {
-        try {
+      handler: async (_args: Record<string, unknown>) =>
+        withErrorHandling(async () => {
           const client = getClient();
           const { data } = await client.get('data/continents', {});
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
-      },
+        }),
     },
     {
       name: 'system_countries',
@@ -93,18 +71,12 @@ registerGroup({
         type: 'object',
         properties: {},
       },
-      handler: async () => {
-        try {
+      handler: async (_args: Record<string, unknown>) =>
+        withErrorHandling(async () => {
           const client = getClient();
           const { data } = await client.get('data/countries', {});
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
-      },
+        }),
     },
     {
       name: 'system_currencies',
@@ -113,18 +85,12 @@ registerGroup({
         type: 'object',
         properties: {},
       },
-      handler: async () => {
-        try {
+      handler: async (_args: Record<string, unknown>) =>
+        withErrorHandling(async () => {
           const client = getClient();
           const { data } = await client.get('data/currencies', {});
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
-      },
+        }),
     },
     {
       name: 'system_current_currency',
@@ -133,18 +99,12 @@ registerGroup({
         type: 'object',
         properties: {},
       },
-      handler: async () => {
-        try {
+      handler: async (_args: Record<string, unknown>) =>
+        withErrorHandling(async () => {
           const client = getClient();
           const { data } = await client.get('data/currencies/current', {});
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
-      },
+        }),
     },
     {
       name: 'system_settings',
@@ -156,12 +116,19 @@ registerGroup({
           per_page: { type: 'integer', description: 'Items per page (max 100)', default: 10 },
         },
       },
-      handler: async (args) => {
-        try {
+      handler: async (args) =>
+        withErrorHandling(async () => {
           const client = getClient();
-          const params: Record<string, unknown> = { ...args };
+          const v = validateArgs(
+            z.object({
+              page: z.number().int().optional(),
+              per_page: z.number().int().optional(),
+            }),
+            args,
+          );
+          const params: Record<string, unknown> = { ...v };
           const { data, headers } = await client.get('settings/general', params);
-          const pagination = extractPagination(headers as Record<string, string | undefined>);
+          const pagination = extractPagination(headers);
           return {
             content: [
               {
@@ -174,13 +141,7 @@ registerGroup({
               },
             ],
           };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
-      },
+        }),
     },
     {
       name: 'system_payment_gateways',
@@ -189,18 +150,12 @@ registerGroup({
         type: 'object',
         properties: {},
       },
-      handler: async () => {
-        try {
+      handler: async (_args: Record<string, unknown>) =>
+        withErrorHandling(async () => {
           const client = getClient();
           const { data } = await client.get('payment_gateways', {});
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        } catch (error) {
-          return {
-            content: [{ type: 'text', text: JSON.stringify(safeError(error), null, 2) }],
-            isError: true,
-          };
-        }
-      },
+        }),
     },
   ],
 });

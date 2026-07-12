@@ -1,3 +1,5 @@
+import { ZodError } from 'zod';
+
 export interface SafeError {
   code: string;
   message: string;
@@ -15,6 +17,14 @@ const HTTP_ERROR_MAP: Record<number, string> = {
 };
 
 export function safeError(error: unknown): SafeError {
+  if (error instanceof ZodError) {
+    return {
+      code: 'VALIDATION_ERROR',
+      message: `Validation failed: ${error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; ')}`,
+      actionable: true,
+    };
+  }
+
   if (error instanceof Error) {
     const axiosError = error as { response?: { status?: number } };
     const status = axiosError.response?.status;
@@ -27,10 +37,20 @@ export function safeError(error: unknown): SafeError {
       };
     }
 
+    // Catch-all dla nieznanych statusów HTTP
+    if (status && status >= 400) {
+      return {
+        code: `HTTP_${status}`,
+        message: HTTP_ERROR_MAP[status] || `HTTP error ${status}`,
+        actionable: status < 500,
+      };
+    }
+
     // Network errors (no response)
+    const nodeError = error as NodeJS.ErrnoException;
     const msg = error.message || '';
     if (!axiosError.response) {
-      if (msg.includes('ENOTFOUND') || msg.includes('ECONNREFUSED')) {
+      if (nodeError.code === 'ENOTFOUND' || nodeError.code === 'ECONNREFUSED') {
         return {
           code: 'NETWORK_ERROR',
           message:
@@ -38,7 +58,7 @@ export function safeError(error: unknown): SafeError {
           actionable: true,
         };
       }
-      if (msg.includes('ECONNABORTED')) {
+      if (nodeError.code === 'ECONNABORTED') {
         return {
           code: 'TIMEOUT',
           message: 'Request timed out. The store might be slow or unreachable.',
