@@ -1,6 +1,7 @@
 import WooCommerceRestApiModule from '@woocommerce/woocommerce-rest-api';
 import type { IWooCommerceRestApiOptions } from '@woocommerce/woocommerce-rest-api';
 import { getConfig } from './config.js';
+import { withRetry } from './retry.js';
 
 // CJS/ESM compat: index.js exports { default: class }, index.mjs exports default class
 const WooCommerceRestApi =
@@ -60,37 +61,7 @@ function createClient(): WooCommerceClient {
     opt: IWooCommerceRestApiOptions,
   ) => WooCommerceClient)(options);
 
-  if (config.retryCount > 0) {
-    return new Proxy(api, {
-      get(target, prop) {
-        const original = target[prop as keyof WooCommerceClient];
-        if (typeof original !== 'function') return original;
-
-        return async (...args: unknown[]) => {
-          let lastError: unknown;
-          for (let attempt = 0; attempt <= config.retryCount; attempt++) {
-            try {
-              return await Reflect.apply(original, target, args);
-            } catch (error) {
-              const status =
-                (error as { response?: { status?: number } })?.response?.status ??
-                (error as { status?: number })?.status;
-              if (status !== undefined && status >= 400 && status < 500) {
-                throw error;
-              }
-              lastError = error;
-              if (attempt < config.retryCount) {
-                await new Promise((r) => setTimeout(r, Math.pow(2, attempt) * 500));
-              }
-            }
-          }
-          throw lastError;
-        };
-      },
-    });
-  }
-
-  return api;
+  return withRetry(api);
 }
 
 export function getClient(): WooCommerceClient {

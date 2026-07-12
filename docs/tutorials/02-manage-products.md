@@ -461,6 +461,60 @@ Wykonaj sekwencyjnie:
 
 ---
 
+## ⚠️ Ograniczenia przy tworzeniu opisów produktów
+
+Podczas używania `products_create` / `products_update` do ustawiania pól `description` i `short_description`, agent musi uwzględniać następujące ograniczenia:
+
+### Czego NIE robić
+
+| Czynność                                                                            | Dlaczego?                                                                                                                  |
+| ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| ❌ Wstawianie `<svg>...</svg>` bezpośrednio w `description` lub `short_description` | WooCommerce REST API przepuszcza dane przez `wp_kses_post()` — **stripuje wszystkie tagi SVG**. SVG nie zostanie zapisany. |
+| ❌ Wstawianie `<style>` w `description`                                             | `wp_kses_post()` usuwa `<style>`. Dodatkowo `wc_format_content()` (wptexturize) zamienia `--` na `–`, psując zmienne CSS.  |
+| ❌ Używanie atrybutów `on*` (onclick, onload) w opisie                              | Są usuwane przez `wp_kses_post()` i frontendową sanitizację.                                                               |
+| ❌ Wstawianie `<script>` w opisie                                                   | Usuwane przez wszystkie warstwy bezpieczeństwa.                                                                            |
+
+### Jak to robić prawidłowo
+
+Projekt używa **meta pól pluginowych** (`_pcb_*`) do przechowywania treści, które nie mogą przejść przez standardową ścieżkę opisu WooCommerce:
+
+| Czego potrzebujesz                                      | Użyj                                         | Przykład                                                                                 |
+| ------------------------------------------------------- | -------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| **SVG w opisie** (ikony, diagramy, grafiki dekoracyjne) | `meta_data` z kluczem `_pcb_description_svg` | `meta_data: [{ key: "_pcb_description_svg", value: "<svg>...</svg>" }]`                  |
+| **CSS/animacje w opisie**                               | `meta_data` z kluczem `_pcb_description_css` | `meta_data: [{ key: "_pcb_description_css", value: ".cls-1 { animation: pulse 2s; }" }]` |
+
+**Jak to działa:**
+
+1. Agent ustawia `meta_data` w `products_create` / `products_update`
+2. Plugin `panel-configurator-bridge` przy odczycie przez Store API injectuje SVG przed opisem (kolejność: SVG → CSS → description body)
+3. Frontend (Next.js) ma 3-warstwową sanitizację: PHP regex → sanitize-html → DOMPurify
+
+**Przykład poprawnego wywołania `products_update` dla produktu z SVG:**
+
+```json
+{
+  "id": 123,
+  "description": "<p>Panel ryflowany z MDF, precyzyjnie frezowany CNC.</p>",
+  "short_description": "Panel dekoracyjny MDF",
+  "meta_data": [
+    {
+      "key": "_pcb_description_svg",
+      "value": "<svg viewBox=\"0 0 100 50\" xmlns=\"http://www.w3.org/2000/svg\"><rect width=\"100\" height=\"50\" fill=\"#f0f0f0\" rx=\"5\"/><text x=\"50\" y=\"30\" text-anchor=\"middle\" font-size=\"12\">Wymiar: 2750×1200 mm</text></svg>"
+    }
+  ]
+}
+```
+
+### Uwagi
+
+- `_pcb_description_svg` jest **dodawany przed** opisem, więc nie powtarzaj treści opisu w SVG
+- `_pcb_description_css` (CSS) jest dodawany za SVG a przed opisem (`<style>`)
+- Oba meta pola są injectowane **tylko** w Store API (`wc/store/v1/products`) — nie w REST API (`wc/v3/products`)
+- Frontend automatycznie scopuje CSS do `.wysiwyg-content` (zapobiega globalnym wyciekom)
+- Sanityzacja po stronie serwera (PHP): strip `<script>`, `on*`, `javascript:` w href, limit 100KB
+
+---
+
 ## Podsumowanie
 
 Opanowałeś pełen CRUD produktów WooCommerce przez MCP. Najważniejsze narzędzia:

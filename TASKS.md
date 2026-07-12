@@ -60,15 +60,21 @@ Dodano 29 brakujących pól do interfejsu `WooProduct` w `src/types.ts` (`featur
 
 ## C15 — DRY: wydzielenie wspólnej funkcji retry/Proxy
 
-**Status:** pending
+**Status:** completed
 **Priority:** low
 
 ### Opis
 
-Logika retry w `withRetry()` (`src/plugin-client.ts`) jest kopią kodu z `client.ts:59-87`. Wydzielić do wspólnego pliku `src/retry.ts`, zaimportować w obu miejscach. Uwaga: `client.ts` używa `WooCommerceClient` interface, a `plugin-client.ts` używa `AxiosInstance` — funkcja powinna być generyczna (accept `T`, zwraca `T` z wrapped metodami).
+Utworzono `src/retry.ts` z generyczną `withRetry<T extends object>(instance: T): T`. Zaktualizowano `src/client.ts` (zastąpiono inline Proxy wywołaniem `withRetry(api)`) i `src/plugin-client.ts` (usunięto lokalną `withRetry`, dodano import).
 
 ### Pliki
 
 - `src/retry.ts` (nowy)
 - `src/client.ts` (refactor)
 - `src/plugin-client.ts` (refactor)
+
+### Verification
+
+- `npm run lint && npm run type-check` ✅
+- `npm run build` ✅
+- `npm test` — 38/38 passed ✅
