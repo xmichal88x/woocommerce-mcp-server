@@ -1,6 +1,10 @@
-import WooCommerceRestApi from '@woocommerce/woocommerce-rest-api';
+import WooCommerceRestApiModule from '@woocommerce/woocommerce-rest-api';
 import type { IWooCommerceRestApiOptions } from '@woocommerce/woocommerce-rest-api';
 import { getConfig } from './config.js';
+
+// CJS/ESM compat: index.js exports { default: class }, index.mjs exports default class
+const WooCommerceRestApi =
+  (WooCommerceRestApiModule as Record<string, unknown>).default ?? WooCommerceRestApiModule;
 
 interface WooCommerceClient {
   get(
@@ -52,9 +56,9 @@ function createClient(): WooCommerceClient {
     timeout: config.timeout,
   };
 
-  const api = new (
-    WooCommerceRestApi as unknown as new (opt: IWooCommerceRestApiOptions) => WooCommerceClient
-  )(options);
+  const api = new (WooCommerceRestApi as unknown as new (
+    opt: IWooCommerceRestApiOptions,
+  ) => WooCommerceClient)(options);
 
   if (config.retryCount > 0) {
     return new Proxy(api, {
