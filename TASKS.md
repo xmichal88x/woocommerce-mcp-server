@@ -176,3 +176,66 @@ Dodać warning w `registerGroup()` gdy nazwa toola już istnieje w registry.
 ### Pliki
 
 - `src/groups.ts`
+
+---
+
+## X3 — Ujednolicenie nazewnictwa parametrów paginacji (limit vs per_page)
+
+**Status:** pending
+**Priority:** low
+
+### Opis
+
+`products_lite_list` używa `limit`, pozostałe narzędzia używają `per_page`. Agent AI może być zdezorientowany.
+
+### Pliki
+
+- `src/tools/panel.ts`
+
+---
+
+## X4 — readOnlyError vs withErrorHandling — niespójna ścieżka błędu
+
+**Status:** pending
+**Priority:** low
+
+### Opis
+
+`readOnlyError()` zwraca early return przed `withErrorHandling`, przez co format odpowiedzi błędu różni się w zależności od ścieżki (read-only vs inny błąd). Sugerowane: rzucać specjalny błąd wewnątrz `withErrorHandling`.
+
+### Pliki
+
+- `src/tools/panel.ts`
+- `src/utils.ts`
+
+---
+
+## X5 — Niespójne typowanie handlerów z pustym inputSchema
+
+**Status:** pending
+**Priority:** low
+
+### Opis
+
+Niektóre handlery używają `_args: Record<string, unknown>`, inne nie mają adnotacji typu. Ujednolicić.
+
+### Pliki
+
+- `src/tools/panel.ts`
+
+---
+
+## X6 — Ekstrakcja wspólnego interfejsu ApiResponse
+
+**Status:** pending
+**Priority:** low
+
+### Opis
+
+Zarówno `WooCommerceClient` (client.ts) jak i `PluginResponse` (plugin-client.ts) mają ten sam kształt `{ data, headers, status }`. Wydzielić do `types.ts`.
+
+### Pliki
+
+- `src/client.ts`
+- `src/plugin-client.ts`
+- `src/types.ts`
