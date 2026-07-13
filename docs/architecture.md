@@ -6,7 +6,7 @@ WooCommerce MCP Server to serwer implementujący protokół MCP (Model Context P
 
 **Główne cechy:**
 
-- ~154 narzędzi MCP zgrupowanych w 12 kategoriach (produkty, zamówienia, klienci, kupony, wysyłka, podatki, raporty, system, email, konfigurator, panel, media)
+- ~114 narzędzi MCP zgrupowanych w 12 kategoriach (produkty, zamówienia, klienci, kupony, wysyłka, podatki, raporty, system, email, konfigurator, panel, media)
 - W pełni typowany — TypeScript strict mode, interfejsy dla wszystkich encji WooCommerce
 - Walidacja każdego inputu przez Zod
 - Wielowarstwowe zabezpieczenia: wymuszony HTTPS, SSRF protection, tryb read-only, lista dozwolonych domen
@@ -34,11 +34,11 @@ WooCommerce MCP Server to serwer implementujący protokół MCP (Model Context P
 │                                                                     │
 │  ┌──────────┐   ┌──────────┐   ┌────────────────────────────────┐  │
 │  │ index.ts │──▶│ server   │──▶│ Tool Registry (groups.ts)      │  │
-│  │ (entry)  │   │ (MCP)   │   │  ├─ products (59 tools)        │  │
+│  │ (entry)  │   │ (MCP)   │   │  ├─ products (37 tools)        │  │
 │  └──────────┘   └──────────┘   │  ├─ orders (11 tools)         │  │
-│                                │  ├─ customers (7 tools)       │  │
-│  ┌──────────┐   ┌──────────┐   │  ├─ coupons (7 tools)        │  │
-│  │ config   │──▶│ client   │──▶│  ├─ shipping (10 tools)      │  │
+│                                │  ├─ customers (6 tools)       │  │
+│  ┌──────────┐   ┌──────────┐   │  ├─ coupons (6 tools)        │  │
+│  │ config   │──▶│ client   │──▶│  ├─ shipping (11 tools)      │  │
 │  │ .ts      │   │ (proxy)  │   │  ├─ taxes (8 tools)          │  │
 │  └──────────┘   └────┬─────┘   │  ├─ reports (8 tools)       │  │
 │                      │         │  ├─ system (9 tools)         │  │
@@ -340,20 +340,20 @@ registerGroup({
 
 ### 4.2 Grupy narzędzi
 
-| Grupa            | Plik                        | Narzędzia | Opis                                                                                               |
-| ---------------- | --------------------------- | --------- | -------------------------------------------------------------------------------------------------- |
-| **products**     | `src/tools/products.ts`     | 59        | CRUD produktów, wariacji, kategorii, tagów, atrybutów, terminów atrybutów, recenzji + batch        |
-| **orders**       | `src/tools/orders.ts`       | 11        | CRUD zamówień, notatki, zwroty + batch                                                             |
-| **customers**    | `src/tools/customers.ts`    | 7         | CRUD klientów + batch                                                                              |
-| **coupons**      | `src/tools/coupons.ts`      | 7         | CRUD kuponów + batch                                                                               |
-| **shipping**     | `src/tools/shipping.ts`     | 10        | CRUD stref wysyłki, metod, lokalizacji                                                             |
-| **taxes**        | `src/tools/taxes.ts`        | 8         | CRUD klas podatkowych, stawek podatkowych                                                          |
-| **reports**      | `src/tools/reports.ts`      | 8         | Raporty sprzedaży, top sellerów, produkty, zamówienia, klienci, kupony, stan magazynowy, przychody |
-| **system**       | `src/tools/system.ts`       | 9         | Status systemu, narzędzia, dane, kontynenty, kraje, waluty, ustawienia, bramki płatności           |
-| **email**        | `src/tools/email.ts`        | 1         | Wysyłanie emaili przez SMTP                                                                        |
-| **configurator** | `src/tools/configurator.ts` | 5         | Schematy konfiguratora, narzędzia CNC AlphaCAM, usługi dodatkowe                                   |
-| **panel**        | `src/tools/panel.ts`        | 8         | Opinie, ranking popularności, FAQ, CSV, dane firmy, feature flags                                  |
-| **media**        | `src/tools/media.ts`        | 3         | Lista, upload, delete mediów przez WordPress REST API (wp/v2/)                                     |
+| Grupa            | Plik                        | Narzędzia | Opis                                                                                                     |
+| ---------------- | --------------------------- | --------- | -------------------------------------------------------------------------------------------------------- |
+| **products**     | `src/tools/products.ts`     | 37        | CRUD produktów, wariacji, kategorii, tagów, atrybutów, terminów atrybutów, recenzji, klas wysyłki, batch |
+| **orders**       | `src/tools/orders.ts`       | 11        | CRUD zamówień, notatki, zwroty + batch                                                                   |
+| **customers**    | `src/tools/customers.ts`    | 6         | CRUD klientów + batch                                                                                    |
+| **coupons**      | `src/tools/coupons.ts`      | 6         | CRUD kuponów + batch                                                                                     |
+| **shipping**     | `src/tools/shipping.ts`     | 11        | CRUD stref wysyłki, metod, lokalizacji                                                                   |
+| **taxes**        | `src/tools/taxes.ts`        | 8         | CRUD klas podatkowych, stawek podatkowych                                                                |
+| **reports**      | `src/tools/reports.ts`      | 8         | Raporty sprzedaży, top sellerów, produkty, zamówienia, klienci, kupony, stan magazynowy, przychody       |
+| **system**       | `src/tools/system.ts`       | 9         | Status systemu, narzędzia, dane, kontynenty, kraje, waluty, ustawienia, bramki płatności                 |
+| **email**        | `src/tools/email.ts`        | 1         | Wysyłanie emaili przez SMTP                                                                              |
+| **configurator** | `src/tools/configurator.ts` | 5         | Schematy konfiguratora, narzędzia CNC AlphaCAM, usługi dodatkowe                                         |
+| **panel**        | `src/tools/panel.ts`        | 8         | Opinie, ranking popularności, FAQ, CSV, dane firmy, feature flags                                        |
+| **media**        | `src/tools/media.ts`        | 3         | Lista, upload, delete mediów przez WordPress REST API (wp/v2/)                                           |
 
 ### 4.3 Wzorce handlerów
 
@@ -823,7 +823,7 @@ TaxClass ──1:N── TaxRate
 
 ## 12. Podsumowanie
 
-WooCommerce MCP Server to w pełni typowany, bezpieczny i modularny serwer MCP, który udostępnia ~154 narzędzia do zarządzania sklepem WooCommerce przez AI agentów (119 core + 35 rozszerzeń). Architektura oparta na:
+WooCommerce MCP Server to w pełni typowany, bezpieczny i modularny serwer MCP, który udostępnia ~114 narzędzia do zarządzania sklepem WooCommerce przez AI agentów (79 core + 35 rozszerzeń). Architektura oparta na:
 
 - **Side-effect registration** dla grup narzędzi (łatwe rozszerzanie)
 - **Proxy pattern** dla retry z exponential backoff

@@ -71,9 +71,15 @@ WooCommerce MCP Server to serwer implementujący protokół MCP (Model Context P
 | `products_attributes_delete`       | Products     | Usuń atrybut               |
 | `products_attributes_terms_list`   | Products     | Lista terminów atrybutu    |
 | `products_attributes_terms_create` | Products     | Utwórz termin atrybutu     |
+| `products_attributes_terms_update` | Products     | Aktualizuj termin atrybutu |
+| `products_attributes_terms_delete` | Products     | Usuń termin atrybutu       |
 | `products_reviews_list`            | Products     | Lista opinii               |
 | `products_reviews_get`             | Products     | Pojedyncza opinia          |
 | `products_reviews_create`          | Products     | Utwórz opinię              |
+| `products_shipping_classes_list`   | Products     | Lista klas wysyłki         |
+| `products_shipping_classes_create` | Products     | Utwórz klasę wysyłki       |
+| `products_shipping_classes_update` | Products     | Aktualizuj klasę wysyłki   |
+| `products_shipping_classes_delete` | Products     | Usuń klasę wysyłki         |
 | `orders_list`                      | Orders       | Lista zamówień             |
 | `orders_get`                       | Orders       | Pojedyncze zamówienie      |
 | `orders_create`                    | Orders       | Utwórz zamówienie          |
@@ -164,10 +170,6 @@ WooCommerce MCP Server to serwer implementujący protokół MCP (Model Context P
 | `product_gallery_set`              | Products-ext | Ustaw galerię zdjęć        |
 | `product_images_set`               | Products-ext | Ustaw główne zdjęcie       |
 | `products_cross_sells_set`         | Products-ext | Ustaw produkty powiązane   |
-| `products_shipping_classes_create` | Products-ext | Utwórz klasę wysyłki       |
-| `products_shipping_classes_delete` | Products-ext | Usuń klasę wysyłki         |
-| `products_shipping_classes_list`   | Products-ext | Lista klas wysyłki         |
-| `products_shipping_classes_update` | Products-ext | Aktualizuj klasę wysyłki   |
 
 ---
 
@@ -210,7 +212,7 @@ WooCommerce MCP Server to serwer implementujący protokół MCP (Model Context P
 
 ### 4.1 Products
 
-Grupa `products` — 31 narzędzi do zarządzania produktami, wariantami, kategoriami, tagami, atrybutami i opiniami.
+Grupa `products` — 37 narzędzi do zarządzania produktami, wariantami, kategoriami, tagami, atrybutami, opiniami i klasami wysyłki.
 
 ---
 
@@ -791,6 +793,127 @@ Utwórz opinię.
 | `reviewer`       | `string`         | **Tak**  | Nazwa recenzenta |
 | `reviewer_email` | `string` (email) | **Tak**  | Email recenzenta |
 | `rating`         | `integer`        | Nie      | Ocena (1–5)      |
+
+---
+
+#### `products_attributes_terms_update`
+
+Aktualizuj termin atrybutu.
+
+**Endpoint WooCommerce:** `PUT /wc/v3/products/attributes/{attribute_id}/terms/{term_id}`
+
+**Parametry:**
+
+| Parametr       | Typ       | Wymagane | Opis          |
+| -------------- | --------- | -------- | ------------- |
+| `attribute_id` | `integer` | **Tak**  | ID atrybutu   |
+| `term_id`      | `integer` | **Tak**  | ID terminu    |
+| `name`         | `string`  | Nie      | Nazwa terminu |
+| `slug`         | `string`  | Nie      | Slug          |
+| `description`  | `string`  | Nie      | Opis          |
+
+**Błąd:** `READ_ONLY` w trybie read-only.
+
+---
+
+#### `products_attributes_terms_delete`
+
+Usuń termin atrybutu.
+
+**Endpoint WooCommerce:** `DELETE /wc/v3/products/attributes/{attribute_id}/terms/{term_id}`
+
+**Parametry:**
+
+| Parametr       | Typ       | Wymagane | Domyślnie | Opis         |
+| -------------- | --------- | -------- | --------- | ------------ |
+| `attribute_id` | `integer` | **Tak**  | —         | ID atrybutu  |
+| `term_id`      | `integer` | **Tak**  | —         | ID terminu   |
+| `force`        | `boolean` | Nie      | `true`    | Force delete |
+
+**Błąd:** `READ_ONLY` w trybie read-only.
+
+---
+
+#### `products_shipping_classes_list`
+
+Lista klas wysyłki produktów.
+
+**Endpoint WooCommerce:** `GET /wc/v3/products/shipping_classes`
+
+**Parametry:**
+
+| Parametr     | Typ       | Wymagane | Domyślnie | Opis                          |
+| ------------ | --------- | -------- | --------- | ----------------------------- |
+| `page`       | `integer` | Nie      | —         | Numer strony                  |
+| `per_page`   | `integer` | Nie      | `10`      | Elementów na stronę (max 100) |
+| `search`     | `string`  | Nie      | —         | Fraza wyszukiwania            |
+| `orderby`    | `string`  | Nie      | —         | `id`, `name`, `slug`, `count` |
+| `order`      | `string`  | Nie      | —         | `asc`, `desc`                 |
+| `hide_empty` | `boolean` | Nie      | —         | Ukryj puste klasy             |
+
+**Odpowiedź:**
+
+```json
+{
+  "shipping_classes": [ { "id": 1, "name": "Heavy", ... } ],
+  "total": 5,
+  "totalPages": 1
+}
+```
+
+---
+
+#### `products_shipping_classes_create`
+
+Utwórz klasę wysyłki.
+
+**Endpoint WooCommerce:** `POST /wc/v3/products/shipping_classes`
+
+**Parametry:**
+
+| Parametr      | Typ      | Wymagane | Opis        |
+| ------------- | -------- | -------- | ----------- |
+| `name`        | `string` | **Tak**  | Nazwa klasy |
+| `slug`        | `string` | Nie      | Slug        |
+| `description` | `string` | Nie      | Opis        |
+
+**Błąd:** `READ_ONLY` w trybie read-only.
+
+---
+
+#### `products_shipping_classes_update`
+
+Aktualizuj klasę wysyłki.
+
+**Endpoint WooCommerce:** `PUT /wc/v3/products/shipping_classes/{id}`
+
+**Parametry:**
+
+| Parametr      | Typ       | Wymagane | Opis        |
+| ------------- | --------- | -------- | ----------- |
+| `id`          | `integer` | **Tak**  | ID klasy    |
+| `name`        | `string`  | Nie      | Nazwa klasy |
+| `slug`        | `string`  | Nie      | Slug        |
+| `description` | `string`  | Nie      | Opis        |
+
+**Błąd:** `READ_ONLY` w trybie read-only.
+
+---
+
+#### `products_shipping_classes_delete`
+
+Usuń klasę wysyłki.
+
+**Endpoint WooCommerce:** `DELETE /wc/v3/products/shipping_classes/{id}`
+
+**Parametry:**
+
+| Parametr | Typ       | Wymagane | Domyślnie | Opis         |
+| -------- | --------- | -------- | --------- | ------------ |
+| `id`     | `integer` | **Tak**  | —         | ID klasy     |
+| `force`  | `boolean` | Nie      | `true`    | Force delete |
+
+**Błąd:** `READ_ONLY` w trybie read-only.
 
 ---
 

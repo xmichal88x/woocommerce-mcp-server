@@ -25,15 +25,6 @@ function mockClient() {
   });
 }
 
-function mockReadOnlyClient() {
-  mockGetClient.mockReturnValue({
-    get: vi.fn(),
-    post: vi.fn(),
-    put: vi.fn(),
-    delete: vi.fn(),
-  });
-}
-
 beforeEach(() => {
   vi.clearAllMocks();
 });
@@ -142,5 +133,180 @@ describe('products tools', () => {
     const result = await tool!.handler({});
     expect(result.isError).toBe(true);
     expect(result.content[0].text).toContain('UNKNOWN_ERROR');
+  });
+
+  it('products_shipping_classes_list handler returns expected structure', async () => {
+    mockClient();
+    mockIsReadOnly.mockReturnValue(false);
+
+    await import('../../src/tools/products.js');
+    const { getActiveTools } = await import('../../src/groups.js');
+
+    const tool = getActiveTools().find((t) => t.name === 'products_shipping_classes_list');
+    expect(tool).toBeDefined();
+
+    const result = await tool!.handler({});
+    expect(result.content[0].type).toBe('text');
+    expect(result.isError).toBeUndefined();
+  });
+
+  it('products_shipping_classes_list handles client error gracefully', async () => {
+    mockGetClient.mockReturnValue({
+      get: vi.fn().mockRejectedValue(new Error('API Error')),
+    });
+    mockIsReadOnly.mockReturnValue(false);
+
+    await import('../../src/tools/products.js');
+    const { getActiveTools } = await import('../../src/groups.js');
+
+    const tool = getActiveTools().find((t) => t.name === 'products_shipping_classes_list');
+    const result = await tool!.handler({});
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain('UNKNOWN_ERROR');
+  });
+
+  it('products_shipping_classes_create is blocked by read-only guard', async () => {
+    mockClient();
+    mockIsReadOnly.mockReturnValue(true);
+
+    await import('../../src/tools/products.js');
+    const { getActiveTools } = await import('../../src/groups.js');
+
+    const tool = getActiveTools().find((t) => t.name === 'products_shipping_classes_create');
+    expect(tool).toBeDefined();
+
+    const result = await tool!.handler({ name: 'Test Class' });
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain('READ_ONLY');
+  });
+
+  it('products_shipping_classes_create works when read-only is false', async () => {
+    mockClient();
+    mockIsReadOnly.mockReturnValue(false);
+
+    await import('../../src/tools/products.js');
+    const { getActiveTools } = await import('../../src/groups.js');
+
+    const tool = getActiveTools().find((t) => t.name === 'products_shipping_classes_create');
+    expect(tool).toBeDefined();
+
+    const result = await tool!.handler({ name: 'Test Class' });
+    expect(result.isError).toBeUndefined();
+  });
+
+  it('products_shipping_classes_update is blocked by read-only guard', async () => {
+    mockClient();
+    mockIsReadOnly.mockReturnValue(true);
+
+    await import('../../src/tools/products.js');
+    const { getActiveTools } = await import('../../src/groups.js');
+
+    const tool = getActiveTools().find((t) => t.name === 'products_shipping_classes_update');
+    expect(tool).toBeDefined();
+
+    const result = await tool!.handler({ id: 1, name: 'Updated Class' });
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain('READ_ONLY');
+  });
+
+  it('products_shipping_classes_update works when read-only is false', async () => {
+    mockClient();
+    mockIsReadOnly.mockReturnValue(false);
+
+    await import('../../src/tools/products.js');
+    const { getActiveTools } = await import('../../src/groups.js');
+
+    const tool = getActiveTools().find((t) => t.name === 'products_shipping_classes_update');
+    expect(tool).toBeDefined();
+
+    const result = await tool!.handler({ id: 1, name: 'Updated Class' });
+    expect(result.isError).toBeUndefined();
+  });
+
+  it('products_shipping_classes_delete is blocked by read-only guard', async () => {
+    mockClient();
+    mockIsReadOnly.mockReturnValue(true);
+
+    await import('../../src/tools/products.js');
+    const { getActiveTools } = await import('../../src/groups.js');
+
+    const tool = getActiveTools().find((t) => t.name === 'products_shipping_classes_delete');
+    expect(tool).toBeDefined();
+
+    const result = await tool!.handler({ id: 1 });
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain('READ_ONLY');
+  });
+
+  it('products_shipping_classes_delete works when read-only is false', async () => {
+    mockClient();
+    mockIsReadOnly.mockReturnValue(false);
+
+    await import('../../src/tools/products.js');
+    const { getActiveTools } = await import('../../src/groups.js');
+
+    const tool = getActiveTools().find((t) => t.name === 'products_shipping_classes_delete');
+    expect(tool).toBeDefined();
+
+    const result = await tool!.handler({ id: 1 });
+    expect(result.isError).toBeUndefined();
+  });
+
+  it('products_attributes_terms_update is blocked by read-only guard', async () => {
+    mockClient();
+    mockIsReadOnly.mockReturnValue(true);
+
+    await import('../../src/tools/products.js');
+    const { getActiveTools } = await import('../../src/groups.js');
+
+    const tool = getActiveTools().find((t) => t.name === 'products_attributes_terms_update');
+    expect(tool).toBeDefined();
+
+    const result = await tool!.handler({ attribute_id: 1, term_id: 1, name: 'Updated Term' });
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain('READ_ONLY');
+  });
+
+  it('products_attributes_terms_update works when read-only is false', async () => {
+    mockClient();
+    mockIsReadOnly.mockReturnValue(false);
+
+    await import('../../src/tools/products.js');
+    const { getActiveTools } = await import('../../src/groups.js');
+
+    const tool = getActiveTools().find((t) => t.name === 'products_attributes_terms_update');
+    expect(tool).toBeDefined();
+
+    const result = await tool!.handler({ attribute_id: 1, term_id: 1, name: 'Updated Term' });
+    expect(result.isError).toBeUndefined();
+  });
+
+  it('products_attributes_terms_delete is blocked by read-only guard', async () => {
+    mockClient();
+    mockIsReadOnly.mockReturnValue(true);
+
+    await import('../../src/tools/products.js');
+    const { getActiveTools } = await import('../../src/groups.js');
+
+    const tool = getActiveTools().find((t) => t.name === 'products_attributes_terms_delete');
+    expect(tool).toBeDefined();
+
+    const result = await tool!.handler({ attribute_id: 1, term_id: 1 });
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain('READ_ONLY');
+  });
+
+  it('products_attributes_terms_delete works when read-only is false', async () => {
+    mockClient();
+    mockIsReadOnly.mockReturnValue(false);
+
+    await import('../../src/tools/products.js');
+    const { getActiveTools } = await import('../../src/groups.js');
+
+    const tool = getActiveTools().find((t) => t.name === 'products_attributes_terms_delete');
+    expect(tool).toBeDefined();
+
+    const result = await tool!.handler({ attribute_id: 1, term_id: 1 });
+    expect(result.isError).toBeUndefined();
   });
 });

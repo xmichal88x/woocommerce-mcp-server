@@ -5,7 +5,8 @@ import { withRetry } from './retry.js';
 
 // CJS/ESM compat: index.js exports { default: class }, index.mjs exports default class
 const WooCommerceRestApi =
-  (WooCommerceRestApiModule as Record<string, unknown>).default ?? WooCommerceRestApiModule;
+  (WooCommerceRestApiModule as unknown as Record<string, unknown>).default ??
+  WooCommerceRestApiModule;
 
 interface WooCommerceClient {
   get(

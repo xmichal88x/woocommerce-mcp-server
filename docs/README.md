@@ -7,7 +7,7 @@ Serwer MCP (Model Context Protocol) do zarządzania sklepem WooCommerce przez AI
 | Dokument                                | Opis                                                                                |
 | --------------------------------------- | ----------------------------------------------------------------------------------- |
 | [Architektura systemu](architecture.md) | Architektura, komponenty, przepływ danych, decyzje projektowe, model bezpieczeństwa |
-| [Referencja API](plugin-api.md)         | Pełna referencja wszystkich ~154 narzędzi MCP, konfiguracja, typy, kody błędów      |
+| [Referencja API](plugin-api.md)         | Pełna referencja wszystkich ~114 narzędzi MCP, konfiguracja, typy, kody błędów      |
 | [Tutoriale](tutorials/)                 | Przewodniki krok po kroku                                                           |
 
 ### Tutoriale
@@ -36,21 +36,21 @@ npm run dev
 
 ## Grupy narzędzi
 
-| Grupa        | Liczba narzędzi | Opis                                                    |
-| ------------ | --------------- | ------------------------------------------------------- |
-| Products     | 59              | Produkty, wariacje, kategorie, tagi, atrybuty, recenzje |
-| Orders       | 11              | Zamówienia, notatki, zwroty                             |
-| Customers    | 7               | Klienci                                                 |
-| Coupons      | 7               | Kupony rabatowe                                         |
-| Shipping     | 10              | Strefy wysyłki, metody, lokalizacje                     |
-| Taxes        | 8               | Klasy podatkowe, stawki                                 |
-| Reports      | 8               | Raporty sprzedaży, stanów, przychodów                   |
-| System       | 9               | Status, ustawienia, geo, bramki płatności               |
-| Email        | 1               | Wysyłka emaili przez SMTP                               |
-| Configurator | 11              | Konfigurator produktu, klasy wysyłki, cross-sell        |
-| Panel        | 20              | Opinie, FAQ, produkcja, ustawienia, popularność         |
-| Media        | 3               | Zarządzanie biblioteką mediów WordPress                 |
-| **Razem**    | **~154**        |                                                         |
+| Grupa        | Liczba narzędzi | Opis                                                                   |
+| ------------ | --------------- | ---------------------------------------------------------------------- |
+| Products     | 37              | Produkty, wariacje, kategorie, tagi, atrybuty, recenzje, klasy wysyłki |
+| Orders       | 11              | Zamówienia, notatki, zwroty                                            |
+| Customers    | 6               | Klienci                                                                |
+| Coupons      | 6               | Kupony rabatowe                                                        |
+| Shipping     | 11              | Strefy wysyłki, metody, lokalizacje                                    |
+| Taxes        | 8               | Klasy podatkowe, stawki                                                |
+| Reports      | 8               | Raporty sprzedaży, stanów, przychodów                                  |
+| System       | 9               | Status, ustawienia, geo, bramki płatności                              |
+| Email        | 1               | Wysyłka emaili przez SMTP                                              |
+| Configurator | 5               | Konfigurator produktu, narzędzia CNC, usługi dodatkowe                 |
+| Panel        | 8               | Opinie, FAQ, produkcja, dane firmy, feature flagi                      |
+| Media        | 3               | Zarządzanie biblioteką mediów WordPress                                |
+| **Razem**    | **~114**        |                                                                        |
 
 ## Komendy
 

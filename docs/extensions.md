@@ -65,14 +65,12 @@ Endpoints pod `panel/v1` dla zarządzania danymi konfiguratora.
 
 ## 7. Produkty — rozszerzenia
 
-| Narzędzie                          | Opis                                            |
-| ---------------------------------- | ----------------------------------------------- |
-| `products_shipping_classes_list`   | Lista klas wysyłki produktów                    |
-| `products_shipping_classes_create` | Utwórz klasę wysyłki                            |
-| `products_shipping_classes_update` | Aktualizuj klasę wysyłki                        |
-| `products_shipping_classes_delete` | Usuń klasę wysyłki                              |
-| `products_cross_sells_set`         | Ustaw produkty powiązane (cross-sell / up-sell) |
+| Narzędzie                  | Opis                                            |
+| -------------------------- | ----------------------------------------------- |
+| `products_cross_sells_set` | Ustaw produkty powiązane (cross-sell / up-sell) |
+
+> **Uwaga:** `products_shipping_classes_list`, `create`, `update`, `delete` zostały zaimplementowane w core (grupa `products`, 37 narzędzi). Nie wymagają custom pluginu WordPress.
 
 ---
 
-**Razem: ~35 narzędzi** w 7 grupach.
+**Razem: ~31 narzędzi** w 7 grupach.

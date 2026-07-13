@@ -4,7 +4,7 @@ import { safeError } from '../src/errors.js';
 function makeError(message: string, status?: number, code?: string): Error {
   const error = new Error(message);
   if (status !== undefined) {
-    (error as Record<string, unknown>).response = { status };
+    (error as unknown as Record<string, unknown>).response = { status };
   }
   if (code !== undefined) {
     (error as NodeJS.ErrnoException).code = code;
@@ -93,7 +93,7 @@ describe('safeError', () => {
 
   it('NEVER leaks response.data in the message', () => {
     const error = makeError('Request failed', 500);
-    (error as Record<string, unknown>).response = {
+    (error as unknown as Record<string, unknown>).response = {
       status: 500,
       data: { message: 'secret internal error details' },
     };

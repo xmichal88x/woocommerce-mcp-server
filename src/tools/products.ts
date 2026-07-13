@@ -1295,5 +1295,198 @@ registerGroup({
         });
       },
     },
+
+    {
+      name: 'products_shipping_classes_list',
+      description: 'List product shipping classes',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          page: { type: 'integer', description: 'Page number' },
+          per_page: { type: 'integer', description: 'Items per page (max 100)', default: 10 },
+          search: { type: 'string', description: 'Search term' },
+          orderby: {
+            type: 'string',
+            enum: ['id', 'name', 'slug', 'count'],
+            description: 'Sort field',
+          },
+          order: { type: 'string', enum: ['asc', 'desc'], description: 'Sort direction' },
+          hide_empty: { type: 'boolean', description: 'Hide empty classes' },
+        },
+      },
+      handler: makeListHandler(
+        'products/shipping_classes',
+        z.object({
+          page: z.number().int().optional(),
+          per_page: z.number().int().optional(),
+          search: z.string().optional(),
+          orderby: z.enum(['id', 'name', 'slug', 'count']).optional(),
+          order: z.enum(['asc', 'desc']).optional(),
+          hide_empty: z.boolean().optional(),
+        }),
+        'shipping_classes',
+      ),
+    },
+    {
+      name: 'products_shipping_classes_create',
+      description: 'Create a product shipping class',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          name: { type: 'string', description: 'Shipping class name' },
+          slug: { type: 'string', description: 'Shipping class slug' },
+          description: { type: 'string', description: 'Shipping class description' },
+        },
+        required: ['name'],
+      },
+      handler: async (args) => {
+        if (isReadOnly()) return readOnlyError();
+        return withErrorHandling(async () => {
+          const v = validateArgs(
+            z.object({
+              name: z.string().min(1),
+              slug: z.string().optional(),
+              description: z.string().optional(),
+            }),
+            args,
+          );
+          const client = getClient();
+          const { data } = await client.post('products/shipping_classes', v);
+          return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
+        });
+      },
+    },
+    {
+      name: 'products_shipping_classes_update',
+      description: 'Update a product shipping class',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          id: { type: 'integer', description: 'Shipping class ID' },
+          name: { type: 'string', description: 'Shipping class name' },
+          slug: { type: 'string', description: 'Shipping class slug' },
+          description: { type: 'string', description: 'Shipping class description' },
+        },
+        required: ['id'],
+      },
+      handler: async (args) => {
+        if (isReadOnly()) return readOnlyError();
+        return withErrorHandling(async () => {
+          const v = validateArgs(
+            z.object({
+              id: z.number().int().positive(),
+              name: z.string().min(1).optional(),
+              slug: z.string().optional(),
+              description: z.string().optional(),
+            }),
+            args,
+          );
+          const client = getClient();
+          const { id, ...data } = v;
+          const { data: result } = await client.put(`products/shipping_classes/${id}`, data);
+          return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+        });
+      },
+    },
+    {
+      name: 'products_shipping_classes_delete',
+      description: 'Delete a product shipping class',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          id: { type: 'integer', description: 'Shipping class ID' },
+          force: { type: 'boolean', description: 'Force delete (skip trash)', default: true },
+        },
+        required: ['id'],
+      },
+      handler: async (args) => {
+        if (isReadOnly()) return readOnlyError();
+        return withErrorHandling(async () => {
+          const v = validateArgs(
+            z.object({
+              id: z.number().int().positive(),
+              force: z.boolean().optional(),
+            }),
+            args,
+          );
+          const client = getClient();
+          const params: Record<string, unknown> = {};
+          if (v.force !== undefined) params.force = v.force;
+          const { data } = await client.delete(`products/shipping_classes/${v.id}`, params);
+          return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
+        });
+      },
+    },
+    {
+      name: 'products_attributes_terms_update',
+      description: 'Update a term for a product attribute',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          attribute_id: { type: 'integer', description: 'Attribute ID' },
+          term_id: { type: 'integer', description: 'Term ID' },
+          name: { type: 'string', description: 'Term name' },
+          slug: { type: 'string', description: 'Term slug' },
+          description: { type: 'string', description: 'Term description' },
+        },
+        required: ['attribute_id', 'term_id'],
+      },
+      handler: async (args) => {
+        if (isReadOnly()) return readOnlyError();
+        return withErrorHandling(async () => {
+          const v = validateArgs(
+            z.object({
+              attribute_id: z.number().int().positive(),
+              term_id: z.number().int().positive(),
+              name: z.string().min(1).optional(),
+              slug: z.string().optional(),
+              description: z.string().optional(),
+            }),
+            args,
+          );
+          const client = getClient();
+          const { attribute_id, term_id, ...data } = v;
+          const { data: result } = await client.put(
+            `products/attributes/${attribute_id}/terms/${term_id}`,
+            data,
+          );
+          return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+        });
+      },
+    },
+    {
+      name: 'products_attributes_terms_delete',
+      description: 'Delete a term for a product attribute',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          attribute_id: { type: 'integer', description: 'Attribute ID' },
+          term_id: { type: 'integer', description: 'Term ID' },
+          force: { type: 'boolean', description: 'Force delete (skip trash)', default: true },
+        },
+        required: ['attribute_id', 'term_id'],
+      },
+      handler: async (args) => {
+        if (isReadOnly()) return readOnlyError();
+        return withErrorHandling(async () => {
+          const v = validateArgs(
+            z.object({
+              attribute_id: z.number().int().positive(),
+              term_id: z.number().int().positive(),
+              force: z.boolean().optional(),
+            }),
+            args,
+          );
+          const client = getClient();
+          const params: Record<string, unknown> = {};
+          if (v.force !== undefined) params.force = v.force;
+          const { data } = await client.delete(
+            `products/attributes/${v.attribute_id}/terms/${v.term_id}`,
+            params,
+          );
+          return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
+        });
+      },
+    },
   ],
 });

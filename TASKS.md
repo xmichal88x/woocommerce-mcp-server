@@ -78,3 +78,63 @@ Utworzono `src/retry.ts` z generyczną `withRetry<T extends object>(instance: T)
 - `npm run lint && npm run type-check` ✅
 - `npm run build` ✅
 - `npm test` — 38/38 passed ✅
+
+---
+
+## C16 — Fix TypeScript errors: `Record<string, unknown>` type assertion
+
+**Status:** completed
+**Priority:** medium
+
+### Opis
+
+3 błędy TS w rzutowaniu typów na `Record<string, unknown>` — brak index signature, wymagane `unknown` pośrednie:
+
+1. `src/client.ts:7` — `typeof WooCommerceRestApi` → `Record<string, unknown>` (CJS/ESM compat)
+2. `tests/errors.test.ts:7` — `Error` → `Record<string, unknown>`
+3. `tests/errors.test.ts:96` — `Error` → `Record<string, unknown>`
+
+### Fix
+
+W każdym przypadku dodać `as unknown` pośrednie:
+
+```typescript
+// Before:
+WooCommerceRestApiModule as Record<string, unknown>;
+// After:
+WooCommerceRestApiModule as unknown as Record<string, unknown>;
+```
+
+### Pliki
+
+- `src/client.ts`
+- `tests/errors.test.ts`
+
+### Verification
+
+- `npm run lint && npm run type-check`
+
+---
+
+## C17 — Fix ESLint warnings
+
+**Status:** completed
+**Priority:** low
+
+### Opis
+
+3 warningi ESLint:
+
+1. `build/config.d.ts:5` — `ALL_GROUPS` zdefiniowany ale tylko jako typ, powinien mieć prefix `_` lub zostać usunięty (build artifact — sprawdzić czy potrzebny)
+2. `eslint.config.js:4` — anonimowy default export tablicy, przypisać do zmiennej
+3. `tests/tools/products.test.ts:28` — `mockReadOnlyClient` zdefiniowany ale nieużywany, dodać prefix `_`
+
+### Pliki
+
+- `build/config.d.ts`
+- `eslint.config.js`
+- `tests/tools/products.test.ts`
+
+### Verification
+
+- `npm run lint`
