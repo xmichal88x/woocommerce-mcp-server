@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { ToolDefinition } from '../src/groups.js';
 
 const mockGetEnabledGroups = vi.fn();
@@ -69,5 +69,17 @@ describe('registerGroup and getActiveTools', () => {
     const { registerGroup, getActiveTools } = await import('../src/groups.js');
     registerGroup({ name: 'products', tools: [mockTool('product_list')] });
     expect(getActiveTools()).toHaveLength(0);
+  });
+
+  it('warns on duplicate tool names across groups', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    mockGetEnabledGroups.mockReturnValue(allEnabled());
+    const { registerGroup } = await import('../src/groups.js');
+    registerGroup({ name: 'products', tools: [mockTool('product_list')] });
+    registerGroup({ name: 'orders', tools: [mockTool('product_list')] });
+    expect(warnSpy).toHaveBeenCalledWith(
+      'Duplicate tool name "product_list" registered in group "orders" (already exists in group "products")',
+    );
+    warnSpy.mockRestore();
   });
 });

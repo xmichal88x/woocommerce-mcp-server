@@ -143,7 +143,7 @@ WooCommerceRestApiModule as unknown as Record<string, unknown>;
 
 ## X1 — Stabilizacja CJS/ESM compat w src/client.ts
 
-**Status:** pending
+**Status:** completed
 **Priority:** low
 
 ### Opis
@@ -162,7 +162,7 @@ Rozważyć użycie `// @ts-expect-error` z opisem lub dedykowanego wrappera z te
 
 ## X2 — Walidacja duplikatów nazw tooli w src/groups.ts
 
-**Status:** pending
+**Status:** completed
 **Priority:** low
 
 ### Opis

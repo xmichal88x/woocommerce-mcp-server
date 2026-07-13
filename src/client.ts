@@ -3,11 +3,6 @@ import type { IWooCommerceRestApiOptions } from '@woocommerce/woocommerce-rest-a
 import { getConfig } from './config.js';
 import { withRetry } from './retry.js';
 
-// CJS/ESM compat: index.js exports { default: class }, index.mjs exports default class
-const WooCommerceRestApi =
-  (WooCommerceRestApiModule as unknown as Record<string, unknown>).default ??
-  WooCommerceRestApiModule;
-
 interface WooCommerceClient {
   get(
     endpoint: string,
@@ -47,6 +42,21 @@ interface WooCommerceClient {
 
 let client: WooCommerceClient | null = null;
 
+function getWooCommerceApi(options: IWooCommerceRestApiOptions): WooCommerceClient {
+  // CJS/ESM compat: @woocommerce/woocommerce-rest-api exports default class in ESM,
+  // but { default: class } in CJS (via __esModule). Nullish coalescing handles both
+  // because esModuleInterop exposes .default on both formats.
+  const ApiClass = WooCommerceRestApiModule.default ?? WooCommerceRestApiModule;
+
+  if (typeof ApiClass !== 'function') {
+    throw new Error(
+      'Failed to construct WooCommerceRestApi: module export is not a constructor function.',
+    );
+  }
+
+  return new ApiClass(options);
+}
+
 function createClient(): WooCommerceClient {
   const config = getConfig();
 
@@ -58,11 +68,7 @@ function createClient(): WooCommerceClient {
     timeout: config.timeout,
   };
 
-  const api = new (
-    WooCommerceRestApi as unknown as new (opt: IWooCommerceRestApiOptions) => WooCommerceClient
-  )(options);
-
-  return withRetry(api);
+  return withRetry(getWooCommerceApi(options));
 }
 
 export function getClient(): WooCommerceClient {
