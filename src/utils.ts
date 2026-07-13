@@ -43,7 +43,7 @@ export function makeListHandler<T extends z.ZodRawShape>(
     withErrorHandling(async () => {
       const v = validateArgs(schema, args);
       const client = getClient();
-      const params: Record<string, unknown> = { ...v };
+      const params = Object.fromEntries(Object.entries(v).filter(([_, val]) => val !== undefined));
       const { data, headers } = await client.get(endpoint, params);
       const { total, totalPages } = extractPagination(headers);
       return {

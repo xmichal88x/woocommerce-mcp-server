@@ -2,8 +2,7 @@ import { z } from 'zod';
 import { registerGroup } from '../groups.js';
 import { getClient } from '../client.js';
 
-import { extractPagination } from '../types.js';
-import { validateArgs, withErrorHandling, assertWriteAccess } from '../utils.js';
+import { makeListHandler, validateArgs, withErrorHandling, assertWriteAccess } from '../utils.js';
 
 registerGroup({
   name: 'taxes',
@@ -78,35 +77,17 @@ registerGroup({
           order: { type: 'string', enum: ['asc', 'desc'], description: 'Sort direction' },
         },
       },
-      handler: async (args) =>
-        withErrorHandling(async () => {
-          const client = getClient();
-          const v = validateArgs(
-            z.object({
-              page: z.number().int().optional(),
-              per_page: z.number().int().optional(),
-              class: z.string().optional(),
-              orderby: z.enum(['id', 'order', 'name']).optional(),
-              order: z.enum(['asc', 'desc']).optional(),
-            }),
-            args,
-          );
-          const params: Record<string, unknown> = { ...v };
-          const { data, headers } = await client.get('taxes/rates', params);
-          const pagination = extractPagination(headers);
-          return {
-            content: [
-              {
-                type: 'text',
-                text: JSON.stringify(
-                  { tax_rates: data, total: pagination.total, totalPages: pagination.totalPages },
-                  null,
-                  2,
-                ),
-              },
-            ],
-          };
+      handler: makeListHandler(
+        'taxes/rates',
+        z.object({
+          page: z.number().int().optional(),
+          per_page: z.number().int().optional(),
+          class: z.string().optional(),
+          orderby: z.enum(['id', 'order', 'name']).optional(),
+          order: z.enum(['asc', 'desc']).optional(),
         }),
+        'tax_rates',
+      ),
     },
     {
       name: 'taxes_rates_get',

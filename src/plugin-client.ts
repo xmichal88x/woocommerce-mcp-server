@@ -1,6 +1,7 @@
 import axios, { type AxiosInstance } from 'axios';
 import { getConfig } from './config.js';
 import { withRetry } from './retry.js';
+import type { ApiResponse } from './types.js';
 
 let panelClient: AxiosInstance | null = null;
 
@@ -42,16 +43,10 @@ export function resetWpClient(): void {
   wpClient = null;
 }
 
-interface PluginResponse<T = unknown> {
-  data: T;
-  headers: Record<string, string | string[] | undefined>;
-  status: number;
-}
-
 export async function pluginGet<T = unknown>(
   endpoint: string,
   params?: Record<string, unknown>,
-): Promise<PluginResponse<T>> {
+): Promise<ApiResponse<T>> {
   const client = getPanelClient();
   const response = await client.get<T>(endpoint, { params });
   return {
@@ -64,7 +59,7 @@ export async function pluginGet<T = unknown>(
 export async function pluginPost<T = unknown>(
   endpoint: string,
   data?: Record<string, unknown>,
-): Promise<PluginResponse<T>> {
+): Promise<ApiResponse<T>> {
   const client = getPanelClient();
   const response = await client.post<T>(endpoint, data);
   return {
@@ -77,7 +72,7 @@ export async function pluginPost<T = unknown>(
 export async function pluginPut<T = unknown>(
   endpoint: string,
   data?: Record<string, unknown>,
-): Promise<PluginResponse<T>> {
+): Promise<ApiResponse<T>> {
   const client = getPanelClient();
   const response = await client.put<T>(endpoint, data);
   return {
@@ -87,7 +82,7 @@ export async function pluginPut<T = unknown>(
   };
 }
 
-export async function pluginDelete<T = unknown>(endpoint: string): Promise<PluginResponse<T>> {
+export async function pluginDelete<T = unknown>(endpoint: string): Promise<ApiResponse<T>> {
   const client = getPanelClient();
   const response = await client.delete<T>(endpoint);
   return {

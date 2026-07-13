@@ -2,6 +2,7 @@ import nodemailer from 'nodemailer';
 import type { Transporter } from 'nodemailer';
 import { z } from 'zod';
 import { registerGroup } from '../groups.js';
+import { SmtpNotConfiguredError } from '../errors.js';
 import { validateArgs, withErrorHandling, assertWriteAccess } from '../utils.js';
 
 let transporter: Transporter | null = null;
@@ -80,23 +81,7 @@ registerGroup({
             args,
           );
           if (!smtpConfigured()) {
-            return {
-              content: [
-                {
-                  type: 'text',
-                  text: JSON.stringify(
-                    {
-                      code: 'SMTP_NOT_CONFIGURED',
-                      message: 'Email not configured. Set SMTP_HOST, SMTP_USER, SMTP_PASS.',
-                      actionable: true,
-                    },
-                    null,
-                    2,
-                  ),
-                },
-              ],
-              isError: true,
-            };
+            throw new SmtpNotConfiguredError();
           }
 
           const from = process.env.SMTP_FROM || process.env.SMTP_USER;

@@ -2,6 +2,12 @@ import dotenv from 'dotenv';
 import { isIPv4 } from 'net';
 dotenv.config();
 
+const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '::1']);
+
+function isLoopbackHost(hostname: string): boolean {
+  return LOOPBACK_HOSTS.has(hostname);
+}
+
 export interface ToolGroupConfig {
   name: string;
   enabled: boolean;
@@ -77,19 +83,23 @@ export function getConfig(): Config {
     throw new Error(`WOOCOMMERCE_URL is not a valid URL: '${url}'`);
   }
   if (parsed.protocol !== 'https:') {
-    throw new Error('WOOCOMMERCE_URL must use HTTPS');
+    const loopback = isLoopbackHost(parsed.hostname);
+    const allowHttp = process.env.WC_ALLOW_HTTP?.toLowerCase() === 'true';
+    if (!loopback && !allowHttp) {
+      throw new Error('WOOCOMMERCE_URL must use HTTPS');
+    }
   }
 
   // Block private IPs (SSRF protection)
   const blockPrivateIps = process.env.WC_BLOCK_PRIVATE_IPS !== 'false';
-  if (blockPrivateIps) {
+  if (blockPrivateIps && !isLoopbackHost(parsed.hostname)) {
     const hostname = parsed.hostname;
 
     if (isIPv4(hostname)) {
       const firstOctet = parseInt(hostname.split('.')[0], 10);
       const secondOctet = parseInt(hostname.split('.')[1] || '0', 10);
       const isPrivate =
-        hostname === '127.0.0.1' ||
+        firstOctet === 127 ||
         hostname === '0.0.0.0' ||
         firstOctet === 10 ||
         (firstOctet === 172 && secondOctet >= 16 && secondOctet <= 31) ||
@@ -117,7 +127,7 @@ export function getConfig(): Config {
 
   // Optional SSRF protection — allowed domains list
   const allowedDomains = process.env.WC_ALLOWED_DOMAINS;
-  if (allowedDomains) {
+  if (allowedDomains && !isLoopbackHost(parsed.hostname)) {
     const domains = allowedDomains
       .split(',')
       .map((d) => d.trim().toLowerCase())

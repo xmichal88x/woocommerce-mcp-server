@@ -30,7 +30,7 @@ registerGroup({
         type: 'object',
         properties: {},
       },
-      handler: async (_args: Record<string, unknown>) =>
+      handler: async (_args) =>
         withErrorHandling(async () => {
           const data = await pluginGet('tools');
           return { content: [{ type: 'text', text: JSON.stringify(data.data, null, 2) }] };
@@ -43,7 +43,7 @@ registerGroup({
         type: 'object',
         properties: {},
       },
-      handler: async (_args: Record<string, unknown>) =>
+      handler: async (_args) =>
         withErrorHandling(async () => {
           const data = await pluginGet('edge-type-tools');
           return { content: [{ type: 'text', text: JSON.stringify(data.data, null, 2) }] };
@@ -56,7 +56,7 @@ registerGroup({
         type: 'object',
         properties: {},
       },
-      handler: async (_args: Record<string, unknown>) =>
+      handler: async (_args) =>
         withErrorHandling(async () => {
           const data = await pluginGet('tool-lists');
           return { content: [{ type: 'text', text: JSON.stringify(data.data, null, 2) }] };
@@ -69,7 +69,7 @@ registerGroup({
         type: 'object',
         properties: {},
       },
-      handler: async (_args: Record<string, unknown>) =>
+      handler: async (_args) =>
         withErrorHandling(async () => {
           const data = await pluginGet('additional-services');
           return { content: [{ type: 'text', text: JSON.stringify(data.data, null, 2) }] };

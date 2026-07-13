@@ -2,42 +2,21 @@ import WooCommerceRestApiModule from '@woocommerce/woocommerce-rest-api';
 import type { IWooCommerceRestApiOptions } from '@woocommerce/woocommerce-rest-api';
 import { getConfig } from './config.js';
 import { withRetry } from './retry.js';
+import type { ApiResponse } from './types.js';
 
 export interface WooCommerceClient {
-  get(
-    endpoint: string,
-    params?: Record<string, unknown>,
-  ): Promise<{
-    data: unknown;
-    headers: Record<string, string | string[] | undefined>;
-    status: number;
-  }>;
+  get(endpoint: string, params?: Record<string, unknown>): Promise<ApiResponse<unknown>>;
   post(
     endpoint: string,
     data: Record<string, unknown>,
     params?: Record<string, unknown>,
-  ): Promise<{
-    data: unknown;
-    headers: Record<string, string | string[] | undefined>;
-    status: number;
-  }>;
+  ): Promise<ApiResponse<unknown>>;
   put(
     endpoint: string,
     data: Record<string, unknown>,
     params?: Record<string, unknown>,
-  ): Promise<{
-    data: unknown;
-    headers: Record<string, string | string[] | undefined>;
-    status: number;
-  }>;
-  delete(
-    endpoint: string,
-    params?: Record<string, unknown>,
-  ): Promise<{
-    data: unknown;
-    headers: Record<string, string | string[] | undefined>;
-    status: number;
-  }>;
+  ): Promise<ApiResponse<unknown>>;
+  delete(endpoint: string, params?: Record<string, unknown>): Promise<ApiResponse<unknown>>;
 }
 
 let client: WooCommerceClient | null = null;

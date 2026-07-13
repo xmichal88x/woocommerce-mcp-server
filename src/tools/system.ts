@@ -15,7 +15,7 @@ registerGroup({
         type: 'object',
         properties: {},
       },
-      handler: async (_args: Record<string, unknown>) =>
+      handler: async (_args) =>
         withErrorHandling(async () => {
           const client = getClient();
           const { data } = await client.get('system_status', {});
@@ -29,7 +29,7 @@ registerGroup({
         type: 'object',
         properties: {},
       },
-      handler: async (_args: Record<string, unknown>) =>
+      handler: async (_args) =>
         withErrorHandling(async () => {
           const client = getClient();
           const { data } = await client.get('system_status/tools', {});
@@ -43,7 +43,7 @@ registerGroup({
         type: 'object',
         properties: {},
       },
-      handler: async (_args: Record<string, unknown>) =>
+      handler: async (_args) =>
         withErrorHandling(async () => {
           const client = getClient();
           const { data } = await client.get('data', {});
@@ -57,7 +57,7 @@ registerGroup({
         type: 'object',
         properties: {},
       },
-      handler: async (_args: Record<string, unknown>) =>
+      handler: async (_args) =>
         withErrorHandling(async () => {
           const client = getClient();
           const { data } = await client.get('data/continents', {});
@@ -71,7 +71,7 @@ registerGroup({
         type: 'object',
         properties: {},
       },
-      handler: async (_args: Record<string, unknown>) =>
+      handler: async (_args) =>
         withErrorHandling(async () => {
           const client = getClient();
           const { data } = await client.get('data/countries', {});
@@ -85,7 +85,7 @@ registerGroup({
         type: 'object',
         properties: {},
       },
-      handler: async (_args: Record<string, unknown>) =>
+      handler: async (_args) =>
         withErrorHandling(async () => {
           const client = getClient();
           const { data } = await client.get('data/currencies', {});
@@ -99,7 +99,7 @@ registerGroup({
         type: 'object',
         properties: {},
       },
-      handler: async (_args: Record<string, unknown>) =>
+      handler: async (_args) =>
         withErrorHandling(async () => {
           const client = getClient();
           const { data } = await client.get('data/currencies/current', {});
@@ -150,7 +150,7 @@ registerGroup({
         type: 'object',
         properties: {},
       },
-      handler: async (_args: Record<string, unknown>) =>
+      handler: async (_args) =>
         withErrorHandling(async () => {
           const client = getClient();
           const { data } = await client.get('payment_gateways', {});

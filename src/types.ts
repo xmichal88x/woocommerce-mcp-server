@@ -261,3 +261,9 @@ export function extractPagination(
     totalPages: parseInt(String(totalPages || '0'), 10) || 0,
   };
 }
+
+export interface ApiResponse<T = unknown> {
+  data: T;
+  headers: Record<string, string | string[] | undefined>;
+  status: number;
+}

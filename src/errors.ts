@@ -16,6 +16,13 @@ const HTTP_ERROR_MAP: Record<number, string> = {
   503: 'Service unavailable. The store might be in maintenance mode.',
 };
 
+export class SmtpNotConfiguredError extends Error {
+  constructor() {
+    super('Email not configured. Set SMTP_HOST, SMTP_USER, SMTP_PASS.');
+    this.name = 'SmtpNotConfiguredError';
+  }
+}
+
 export class ReadOnlyError extends Error {
   constructor() {
     super('Server is in read-only mode. This operation is not allowed.');
@@ -34,6 +41,10 @@ export function safeError(error: unknown): SafeError {
 
   if (error instanceof ReadOnlyError) {
     return { code: 'READ_ONLY', message: error.message, actionable: false };
+  }
+
+  if (error instanceof SmtpNotConfiguredError) {
+    return { code: 'SMTP_NOT_CONFIGURED', message: error.message, actionable: true };
   }
 
   if (error instanceof Error) {

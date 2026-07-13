@@ -14,7 +14,7 @@ registerGroup({
         type: 'object',
         properties: {},
       },
-      handler: async (_args: Record<string, unknown>) =>
+      handler: async (_args) =>
         withErrorHandling(async () => {
           const client = getClient();
           const { data } = await client.get('shipping/zones', {});

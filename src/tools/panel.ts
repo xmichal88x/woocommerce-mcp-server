@@ -12,17 +12,19 @@ registerGroup({
       inputSchema: {
         type: 'object',
         properties: {
-          limit: { type: 'integer', description: 'Number of products to return' },
+          per_page: { type: 'integer', description: 'Items per page (max 100)' },
           page: { type: 'integer', description: 'Page number' },
         },
       },
       handler: async (args) =>
         withErrorHandling(async () => {
           const v = validateArgs(
-            z.object({
-              limit: z.number().int().min(1).max(100).optional(),
-              page: z.number().int().optional(),
-            }),
+            z
+              .object({
+                per_page: z.number().int().min(1).max(100).optional(),
+                page: z.number().int().optional(),
+              })
+              .strict(),
             args,
           );
           const data = await pluginGet('products-lite', v);
@@ -41,9 +43,11 @@ registerGroup({
       handler: async (args) =>
         withErrorHandling(async () => {
           const v = validateArgs(
-            z.object({
-              per_page: z.number().int().min(1).max(50).optional(),
-            }),
+            z
+              .object({
+                per_page: z.number().int().min(1).max(50).optional(),
+              })
+              .strict(),
             args,
           );
           const data = await pluginGet('products-popular', v);
@@ -107,7 +111,7 @@ registerGroup({
         type: 'object',
         properties: {},
       },
-      handler: async (_args: Record<string, unknown>) =>
+      handler: async (_args) =>
         withErrorHandling(async () => {
           const data = await pluginGet('faq-categories');
           return { content: [{ type: 'text', text: JSON.stringify(data.data, null, 2) }] };
@@ -137,7 +141,7 @@ registerGroup({
         type: 'object',
         properties: {},
       },
-      handler: async (_args: Record<string, unknown>) =>
+      handler: async (_args) =>
         withErrorHandling(async () => {
           const data = await pluginGet('company');
           return { content: [{ type: 'text', text: JSON.stringify(data.data, null, 2) }] };
@@ -150,7 +154,7 @@ registerGroup({
         type: 'object',
         properties: {},
       },
-      handler: async (_args: Record<string, unknown>) =>
+      handler: async (_args) =>
         withErrorHandling(async () => {
           const data = await pluginGet('features');
           return { content: [{ type: 'text', text: JSON.stringify(data.data, null, 2) }] };
@@ -367,7 +371,7 @@ registerGroup({
         type: 'object',
         properties: {},
       },
-      handler: async (_args: Record<string, unknown>) =>
+      handler: async (_args) =>
         withErrorHandling(async () => {
           const data = await pluginGet('admin/popularity-settings');
           return { content: [{ type: 'text', text: JSON.stringify(data.data, null, 2) }] };
