@@ -26,9 +26,12 @@ export function safeError(error: unknown): SafeError {
   }
 
   if (error instanceof Error) {
+    const errResponse = error as unknown as Record<string, unknown>;
     const response =
-      'response' in error && typeof (error as Record<string, unknown>).response === 'object'
-        ? ((error as Record<string, unknown>).response as { status?: number })
+      'response' in error &&
+      errResponse.response !== null &&
+      typeof errResponse.response === 'object'
+        ? (errResponse.response as { status?: number })
         : undefined;
     const status = response?.status;
 
@@ -50,8 +53,8 @@ export function safeError(error: unknown): SafeError {
     }
 
     // Network errors (no response)
-    const errno = (error as { code?: string }).code;
     if (!response) {
+      const errno = (error as { code?: string }).code;
       if (errno === 'ENOTFOUND' || errno === 'ECONNREFUSED') {
         return {
           code: 'NETWORK_ERROR',

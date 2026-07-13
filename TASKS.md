@@ -239,3 +239,33 @@ Zarówno `WooCommerceClient` (client.ts) jak i `PluginResponse` (plugin-client.t
 - `src/client.ts`
 - `src/plugin-client.ts`
 - `src/types.ts`
+
+---
+
+## X7 — Refactoring: split src/tools/products.ts (>2000 lines)
+
+**Status:** pending
+**Priority:** low
+
+### Opis
+
+`src/tools/products.ts` ma > 2000 linii w jednym pliku. Wydzielić na moduły: products-crud.ts, products-variations.ts, products-categories.ts, products-tags.ts, products-attributes.ts, products-reviews.ts, products-shipping.ts.
+
+### Pliki
+
+- `src/tools/products.ts`
+
+---
+
+## X8 — HTTPS enforcement blokuje localhost w dev
+
+**Status:** pending
+**Priority:** low
+
+### Opis
+
+`src/config.ts:79-81` — HTTPS enforcement blokuje `http://localhost` nawet w dev. Dodać flagę `WC_ALLOW_HTTP` lub wyjątek dla localhost.
+
+### Pliki
+
+- `src/config.ts`

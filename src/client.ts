@@ -3,7 +3,7 @@ import type { IWooCommerceRestApiOptions } from '@woocommerce/woocommerce-rest-a
 import { getConfig } from './config.js';
 import { withRetry } from './retry.js';
 
-interface WooCommerceClient {
+export interface WooCommerceClient {
   get(
     endpoint: string,
     params?: Record<string, unknown>,
@@ -46,7 +46,10 @@ function getWooCommerceApi(options: IWooCommerceRestApiOptions): WooCommerceClie
   // CJS/ESM compat: @woocommerce/woocommerce-rest-api exports default class in ESM,
   // but { default: class } in CJS (via __esModule). Nullish coalescing handles both
   // because esModuleInterop exposes .default on both formats.
-  const ApiClass = WooCommerceRestApiModule.default ?? WooCommerceRestApiModule;
+  const ApiClass = (WooCommerceRestApiModule.default ??
+    WooCommerceRestApiModule) as unknown as new (
+    opts: IWooCommerceRestApiOptions,
+  ) => WooCommerceClient;
 
   if (typeof ApiClass !== 'function') {
     throw new Error(

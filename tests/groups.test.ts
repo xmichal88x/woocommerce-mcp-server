@@ -27,6 +27,9 @@ function allEnabled() {
     { name: 'reports', enabled: true },
     { name: 'system', enabled: true },
     { name: 'email', enabled: true },
+    { name: 'panel', enabled: true },
+    { name: 'configurator', enabled: true },
+    { name: 'media', enabled: true },
   ];
 }
 
@@ -34,6 +37,10 @@ describe('registerGroup and getActiveTools', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.resetModules();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it('starts with no tools', async () => {
@@ -78,7 +85,13 @@ describe('registerGroup and getActiveTools', () => {
     registerGroup({ name: 'products', tools: [mockTool('product_list')] });
     registerGroup({ name: 'orders', tools: [mockTool('product_list')] });
     expect(warnSpy).toHaveBeenCalledWith(
-      'Duplicate tool name "product_list" registered in group "orders" (already exists in group "products")',
+      JSON.stringify({
+        level: 'warn',
+        message: 'Duplicate tool name registered',
+        toolName: 'product_list',
+        group: 'orders',
+        existingGroup: 'products',
+      }),
     );
     warnSpy.mockRestore();
   });

@@ -1,4 +1,3 @@
-import axios from 'axios';
 import { z } from 'zod';
 import { isIPv4 } from 'net';
 import { getWpClient } from '../plugin-client.js';
@@ -115,9 +114,9 @@ registerGroup({
             }
           }
 
-          const imageResp = await axios.get(v.source, { responseType: 'arraybuffer' });
-          const buffer = Buffer.from(imageResp.data);
-          const contentType = String(imageResp.headers['content-type'] || 'image/jpeg');
+          const imageResp = await fetch(v.source);
+          const buffer = Buffer.from(await imageResp.arrayBuffer());
+          const contentType = String(imageResp.headers.get('content-type') || 'image/jpeg');
           if (!contentType.startsWith('image/')) {
             throw new Error(`Invalid content type '${contentType}'. Only image types are allowed.`);
           }

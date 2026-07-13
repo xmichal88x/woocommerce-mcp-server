@@ -30,7 +30,9 @@ export function getWpClient(): AxiosInstance {
     axios.create({
       baseURL: `${config.url}/wp-json/wp/v2/`,
       timeout: config.timeout,
-      auth: { username: config.wpAppUsername, password: config.wpAppPassword },
+      ...(config.wpAppUsername
+        ? { auth: { username: config.wpAppUsername, password: config.wpAppPassword } }
+        : {}),
     }),
   );
   return wpClient;
