@@ -58,9 +58,9 @@ function createClient(): WooCommerceClient {
     timeout: config.timeout,
   };
 
-  const api = new (WooCommerceRestApi as unknown as new (
-    opt: IWooCommerceRestApiOptions,
-  ) => WooCommerceClient)(options);
+  const api = new (
+    WooCommerceRestApi as unknown as new (opt: IWooCommerceRestApiOptions) => WooCommerceClient
+  )(options);
 
   return withRetry(api);
 }

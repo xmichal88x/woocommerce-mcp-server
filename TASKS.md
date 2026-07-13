@@ -138,3 +138,41 @@ WooCommerceRestApiModule as unknown as Record<string, unknown>;
 ### Verification
 
 - `npm run lint`
+
+---
+
+## X1 — Stabilizacja CJS/ESM compat w src/client.ts
+
+**Status:** pending
+**Priority:** low
+
+### Opis
+
+Podwójne `as unknown as Record<string, unknown>` przy imporcie `@woocommerce/woocommerce-rest-api` (linia 7-9) jest kruche i traci bezpieczeństwo typów. Przy upgrade paczki może cicho przestać działać.
+
+### Sugestia
+
+Rozważyć użycie `// @ts-expect-error` z opisem lub dedykowanego wrappera z testem runtime sprawdzającym `typeof WooCommerceRestApi === 'function'`.
+
+### Pliki
+
+- `src/client.ts`
+
+---
+
+## X2 — Walidacja duplikatów nazw tooli w src/groups.ts
+
+**Status:** pending
+**Priority:** low
+
+### Opis
+
+Jeśli dwie grupy zarejestrują tool o tej samej nazwie, druga nadpisuje pierwszą bez ostrzeżenia. Np. grupa `panel` i inna grupa mają tool `faq_list` — jeden zostanie zgubiony.
+
+### Sugestia
+
+Dodać warning w `registerGroup()` gdy nazwa toola już istnieje w registry.
+
+### Pliki
+
+- `src/groups.ts`

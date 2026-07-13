@@ -26,8 +26,11 @@ export function safeError(error: unknown): SafeError {
   }
 
   if (error instanceof Error) {
-    const axiosError = error as { response?: { status?: number } };
-    const status = axiosError.response?.status;
+    const response =
+      'response' in error && typeof (error as Record<string, unknown>).response === 'object'
+        ? ((error as Record<string, unknown>).response as { status?: number })
+        : undefined;
+    const status = response?.status;
 
     if (status && HTTP_ERROR_MAP[status]) {
       return {
@@ -41,16 +44,15 @@ export function safeError(error: unknown): SafeError {
     if (status && status >= 400) {
       return {
         code: `HTTP_${status}`,
-        message: HTTP_ERROR_MAP[status] || `HTTP error ${status}`,
+        message: `HTTP error ${status}`,
         actionable: status < 500,
       };
     }
 
     // Network errors (no response)
-    const nodeError = error as NodeJS.ErrnoException;
-    const msg = error.message || '';
-    if (!axiosError.response) {
-      if (nodeError.code === 'ENOTFOUND' || nodeError.code === 'ECONNREFUSED') {
+    const errno = (error as { code?: string }).code;
+    if (!response) {
+      if (errno === 'ENOTFOUND' || errno === 'ECONNREFUSED') {
         return {
           code: 'NETWORK_ERROR',
           message:
@@ -58,7 +60,7 @@ export function safeError(error: unknown): SafeError {
           actionable: true,
         };
       }
-      if (nodeError.code === 'ECONNABORTED') {
+      if (errno === 'ECONNABORTED') {
         return {
           code: 'TIMEOUT',
           message: 'Request timed out. The store might be slow or unreachable.',
@@ -69,7 +71,7 @@ export function safeError(error: unknown): SafeError {
 
     return {
       code: 'UNKNOWN_ERROR',
-      message: msg,
+      message: error.message || 'An unexpected error occurred.',
       actionable: false,
     };
   }
