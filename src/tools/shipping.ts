@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { registerGroup } from '../groups.js';
-import { getClient, isReadOnly } from '../client.js';
-import { readOnlyError, validateArgs, withErrorHandling } from '../utils.js';
+import { getClient } from '../client.js';
+import { validateArgs, withErrorHandling, assertWriteAccess } from '../utils.js';
 
 registerGroup({
   name: 'shipping',
@@ -50,9 +50,9 @@ registerGroup({
         },
         required: ['name'],
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(
             z.object({
               name: z.string().min(1),
@@ -63,8 +63,7 @@ registerGroup({
           const client = getClient();
           const { data } = await client.post('shipping/zones', v);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        });
-      },
+        }),
     },
     {
       name: 'shipping_zones_update',
@@ -78,9 +77,9 @@ registerGroup({
         },
         required: ['id'],
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(
             z.object({
               id: z.number().int().positive(),
@@ -93,8 +92,7 @@ registerGroup({
           const { id, ...data } = v;
           const { data: result } = await client.put(`shipping/zones/${id}`, data);
           return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
-        });
-      },
+        }),
     },
     {
       name: 'shipping_zones_delete',
@@ -106,15 +104,14 @@ registerGroup({
         },
         required: ['id'],
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(z.object({ id: z.number().int().positive() }), args);
           const client = getClient();
           const { data } = await client.delete(`shipping/zones/${v.id}`, {});
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        });
-      },
+        }),
     },
 
     // ── Shipping Zone Methods ──
@@ -183,9 +180,9 @@ registerGroup({
         },
         required: ['zone_id', 'method_id'],
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(
             z.object({
               zone_id: z.number().int().positive(),
@@ -201,8 +198,7 @@ registerGroup({
           const { zone_id, ...data } = v;
           const { data: result } = await client.post(`shipping/zones/${zone_id}/methods`, data);
           return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
-        });
-      },
+        }),
     },
     {
       name: 'shipping_zone_methods_update',
@@ -219,9 +215,9 @@ registerGroup({
         },
         required: ['zone_id', 'method_id'],
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(
             z.object({
               zone_id: z.number().int().positive(),
@@ -240,8 +236,7 @@ registerGroup({
             data,
           );
           return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
-        });
-      },
+        }),
     },
     {
       name: 'shipping_zone_methods_delete',
@@ -254,9 +249,9 @@ registerGroup({
         },
         required: ['zone_id', 'method_id'],
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(
             z.object({
               zone_id: z.number().int().positive(),
@@ -270,8 +265,7 @@ registerGroup({
             {},
           );
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        });
-      },
+        }),
     },
 
     // ── Shipping Zone Locations ──

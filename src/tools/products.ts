@@ -1,9 +1,9 @@
 import { z } from 'zod';
 import { registerGroup } from '../groups.js';
-import { getClient, isReadOnly } from '../client.js';
+import { getClient } from '../client.js';
 
 import { extractPagination } from '../types.js';
-import { makeListHandler, readOnlyError, validateArgs, withErrorHandling } from '../utils.js';
+import { makeListHandler, validateArgs, withErrorHandling, assertWriteAccess } from '../utils.js';
 
 registerGroup({
   name: 'products',
@@ -144,9 +144,9 @@ registerGroup({
         },
         required: ['name'],
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(
             z.object({
               name: z.string().min(1),
@@ -177,8 +177,7 @@ registerGroup({
           const client = getClient();
           const { data } = await client.post('products', v);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        });
-      },
+        }),
     },
     {
       name: 'products_update',
@@ -258,9 +257,9 @@ registerGroup({
         },
         required: ['id'],
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(
             z.object({
               id: z.number().int().positive(),
@@ -302,8 +301,7 @@ registerGroup({
           const { id, ...data } = v;
           const { data: result } = await client.put(`products/${id}`, data);
           return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
-        });
-      },
+        }),
     },
     {
       name: 'products_delete',
@@ -316,9 +314,9 @@ registerGroup({
         },
         required: ['id'],
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(
             z.object({
               id: z.number().int().positive(),
@@ -331,8 +329,7 @@ registerGroup({
           if (v.force !== undefined) params.force = v.force;
           const { data } = await client.delete(`products/${v.id}`, params);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        });
-      },
+        }),
     },
     {
       name: 'products_batch',
@@ -357,9 +354,9 @@ registerGroup({
           },
         },
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(
             z.object({
               create: z.array(z.object({}).passthrough()).optional(),
@@ -371,8 +368,7 @@ registerGroup({
           const client = getClient();
           const { data } = await client.post('products/batch', v);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        });
-      },
+        }),
     },
 
     // ── Product Variations ──
@@ -492,9 +488,9 @@ registerGroup({
         },
         required: ['product_id'],
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(
             z.object({
               product_id: z.number().int().positive(),
@@ -527,8 +523,7 @@ registerGroup({
           const { product_id, ...data } = v;
           const { data: result } = await client.post(`products/${product_id}/variations`, data);
           return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
-        });
-      },
+        }),
     },
     {
       name: 'products_variations_update',
@@ -579,9 +574,9 @@ registerGroup({
         },
         required: ['product_id', 'variation_id'],
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(
             z.object({
               product_id: z.number().int().positive(),
@@ -618,8 +613,7 @@ registerGroup({
             data,
           );
           return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
-        });
-      },
+        }),
     },
     {
       name: 'products_variations_delete',
@@ -633,9 +627,9 @@ registerGroup({
         },
         required: ['product_id', 'variation_id'],
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(
             z.object({
               product_id: z.number().int().positive(),
@@ -652,8 +646,7 @@ registerGroup({
             params,
           );
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        });
-      },
+        }),
     },
 
     // ── Product Categories ──
@@ -716,9 +709,9 @@ registerGroup({
         },
         required: ['name'],
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(
             z.object({
               name: z.string().min(1),
@@ -737,8 +730,7 @@ registerGroup({
           const client = getClient();
           const { data } = await client.post('products/categories', v);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        });
-      },
+        }),
     },
     {
       name: 'products_categories_update',
@@ -759,9 +751,9 @@ registerGroup({
         },
         required: ['id'],
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(
             z.object({
               id: z.number().int().positive(),
@@ -782,8 +774,7 @@ registerGroup({
           const { id, ...data } = v;
           const { data: result } = await client.put(`products/categories/${id}`, data);
           return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
-        });
-      },
+        }),
     },
     {
       name: 'products_categories_delete',
@@ -796,9 +787,9 @@ registerGroup({
         },
         required: ['id'],
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(
             z.object({
               id: z.number().int().positive(),
@@ -811,8 +802,7 @@ registerGroup({
           if (v.force !== undefined) params.force = v.force;
           const { data } = await client.delete(`products/categories/${v.id}`, params);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        });
-      },
+        }),
     },
 
     // ── Product Tags ──
@@ -877,9 +867,9 @@ registerGroup({
         },
         required: ['name'],
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(
             z.object({
               name: z.string().min(1),
@@ -891,8 +881,7 @@ registerGroup({
           const client = getClient();
           const { data } = await client.post('products/tags', v);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        });
-      },
+        }),
     },
     {
       name: 'products_tags_update',
@@ -907,9 +896,9 @@ registerGroup({
         },
         required: ['id'],
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(
             z.object({
               id: z.number().int().positive(),
@@ -923,8 +912,7 @@ registerGroup({
           const { id, ...data } = v;
           const { data: result } = await client.put(`products/tags/${id}`, data);
           return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
-        });
-      },
+        }),
     },
     {
       name: 'products_tags_delete',
@@ -937,9 +925,9 @@ registerGroup({
         },
         required: ['id'],
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(
             z.object({
               id: z.number().int().positive(),
@@ -952,8 +940,7 @@ registerGroup({
           if (v.force !== undefined) params.force = v.force;
           const { data } = await client.delete(`products/tags/${v.id}`, params);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        });
-      },
+        }),
     },
 
     // ── Product Attributes ──
@@ -1027,9 +1014,9 @@ registerGroup({
         },
         required: ['name'],
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(
             z.object({
               name: z.string().min(1),
@@ -1043,8 +1030,7 @@ registerGroup({
           const client = getClient();
           const { data } = await client.post('products/attributes', v);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        });
-      },
+        }),
     },
     {
       name: 'products_attributes_update',
@@ -1065,9 +1051,9 @@ registerGroup({
         },
         required: ['id'],
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(
             z.object({
               id: z.number().int().positive(),
@@ -1083,8 +1069,7 @@ registerGroup({
           const { id, ...data } = v;
           const { data: result } = await client.put(`products/attributes/${id}`, data);
           return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
-        });
-      },
+        }),
     },
     {
       name: 'products_attributes_delete',
@@ -1097,9 +1082,9 @@ registerGroup({
         },
         required: ['id'],
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(
             z.object({
               id: z.number().int().positive(),
@@ -1112,8 +1097,7 @@ registerGroup({
           if (v.force !== undefined) params.force = v.force;
           const { data } = await client.delete(`products/attributes/${v.id}`, params);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        });
-      },
+        }),
     },
     {
       name: 'products_attributes_terms_list',
@@ -1183,9 +1167,9 @@ registerGroup({
         },
         required: ['attribute_id', 'name'],
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(
             z.object({
               attribute_id: z.number().int().positive(),
@@ -1202,8 +1186,7 @@ registerGroup({
             data,
           );
           return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
-        });
-      },
+        }),
     },
 
     // ── Product Reviews ──
@@ -1276,9 +1259,9 @@ registerGroup({
         },
         required: ['product_id', 'review', 'reviewer', 'reviewer_email'],
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(
             z.object({
               product_id: z.number().int().positive(),
@@ -1292,8 +1275,7 @@ registerGroup({
           const client = getClient();
           const { data } = await client.post('products/reviews', v);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        });
-      },
+        }),
     },
 
     {
@@ -1339,9 +1321,9 @@ registerGroup({
         },
         required: ['name'],
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(
             z.object({
               name: z.string().min(1),
@@ -1353,8 +1335,7 @@ registerGroup({
           const client = getClient();
           const { data } = await client.post('products/shipping_classes', v);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        });
-      },
+        }),
     },
     {
       name: 'products_shipping_classes_update',
@@ -1369,9 +1350,9 @@ registerGroup({
         },
         required: ['id'],
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(
             z.object({
               id: z.number().int().positive(),
@@ -1385,8 +1366,7 @@ registerGroup({
           const { id, ...data } = v;
           const { data: result } = await client.put(`products/shipping_classes/${id}`, data);
           return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
-        });
-      },
+        }),
     },
     {
       name: 'products_shipping_classes_delete',
@@ -1399,9 +1379,9 @@ registerGroup({
         },
         required: ['id'],
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(
             z.object({
               id: z.number().int().positive(),
@@ -1414,8 +1394,7 @@ registerGroup({
           if (v.force !== undefined) params.force = v.force;
           const { data } = await client.delete(`products/shipping_classes/${v.id}`, params);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        });
-      },
+        }),
     },
     {
       name: 'products_attributes_terms_update',
@@ -1431,9 +1410,9 @@ registerGroup({
         },
         required: ['attribute_id', 'term_id'],
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(
             z.object({
               attribute_id: z.number().int().positive(),
@@ -1451,8 +1430,7 @@ registerGroup({
             data,
           );
           return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
-        });
-      },
+        }),
     },
     {
       name: 'products_attributes_terms_delete',
@@ -1466,9 +1444,9 @@ registerGroup({
         },
         required: ['attribute_id', 'term_id'],
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(
             z.object({
               attribute_id: z.number().int().positive(),
@@ -1485,8 +1463,7 @@ registerGroup({
             params,
           );
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        });
-      },
+        }),
     },
   ],
 });

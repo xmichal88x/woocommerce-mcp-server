@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { safeError } from './errors.js';
-import { getClient } from './client.js';
+import { safeError, ReadOnlyError } from './errors.js';
+import { getClient, isReadOnly } from './client.js';
 import { extractPagination } from './types.js';
 
 export function validateArgs<T extends z.ZodRawShape>(
@@ -14,24 +14,8 @@ export function validateArgs<T extends z.ZodRawShape>(
   return result.data;
 }
 
-export function readOnlyError() {
-  return {
-    content: [
-      {
-        type: 'text' as const,
-        text: JSON.stringify(
-          {
-            code: 'READ_ONLY',
-            message: 'Server is in read-only mode. This operation is not allowed.',
-            actionable: false,
-          },
-          null,
-          2,
-        ),
-      },
-    ],
-    isError: true,
-  };
+export function assertWriteAccess(): void {
+  if (isReadOnly()) throw new ReadOnlyError();
 }
 
 export async function withErrorHandling<T>(

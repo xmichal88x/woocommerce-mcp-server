@@ -1,9 +1,9 @@
 import { z } from 'zod';
 import { registerGroup } from '../groups.js';
-import { getClient, isReadOnly } from '../client.js';
+import { getClient } from '../client.js';
 
 import { extractPagination } from '../types.js';
-import { makeListHandler, readOnlyError, validateArgs, withErrorHandling } from '../utils.js';
+import { makeListHandler, validateArgs, withErrorHandling, assertWriteAccess } from '../utils.js';
 import { billingSchema, shippingSchema, metaDataSchema } from '../schemas.js';
 
 const lineItemSchema = z.object({
@@ -200,15 +200,14 @@ registerGroup({
           },
         },
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(z.object(orderOptionalFields), args);
           const client = getClient();
           const { data } = await client.post('orders', v);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        });
-      },
+        }),
     },
     {
       name: 'orders_update',
@@ -301,9 +300,9 @@ registerGroup({
         },
         required: ['id'],
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(
             z.object({ id: z.number().int().positive(), ...orderOptionalFields }),
             args,
@@ -312,8 +311,7 @@ registerGroup({
           const { id, ...data } = v;
           const { data: result } = await client.put(`orders/${id}`, data);
           return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
-        });
-      },
+        }),
     },
     {
       name: 'orders_delete',
@@ -326,9 +324,9 @@ registerGroup({
         },
         required: ['id'],
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(
             z.object({ id: z.number().int().positive(), force: z.boolean().optional() }),
             args,
@@ -338,8 +336,7 @@ registerGroup({
           if (v.force !== undefined) params.force = v.force;
           const { data } = await client.delete(`orders/${v.id}`, params);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        });
-      },
+        }),
     },
     {
       name: 'orders_batch',
@@ -364,9 +361,9 @@ registerGroup({
           },
         },
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(
             z.object({
               create: z.array(z.object({}).passthrough()).optional(),
@@ -378,8 +375,7 @@ registerGroup({
           const client = getClient();
           const { data } = await client.post('orders/batch', v);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        });
-      },
+        }),
     },
 
     // ── Order Notes ──
@@ -439,9 +435,9 @@ registerGroup({
         },
         required: ['order_id', 'note'],
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(
             z.object({
               order_id: z.number().int().positive(),
@@ -454,8 +450,7 @@ registerGroup({
           const { order_id, ...data } = v;
           const { data: result } = await client.post(`orders/${order_id}/notes`, data);
           return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
-        });
-      },
+        }),
     },
 
     // ── Order Refunds ──
@@ -570,9 +565,9 @@ registerGroup({
         },
         required: ['order_id', 'amount'],
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(
             z.object({
               order_id: z.number().int().positive(),
@@ -605,8 +600,7 @@ registerGroup({
           const { order_id, ...data } = v;
           const { data: result } = await client.post(`orders/${order_id}/refunds`, data);
           return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
-        });
-      },
+        }),
     },
   ],
 });

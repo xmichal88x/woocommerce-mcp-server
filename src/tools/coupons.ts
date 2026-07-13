@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { registerGroup } from '../groups.js';
-import { getClient, isReadOnly } from '../client.js';
+import { getClient } from '../client.js';
 
-import { makeListHandler, readOnlyError, validateArgs, withErrorHandling } from '../utils.js';
+import { makeListHandler, validateArgs, withErrorHandling, assertWriteAccess } from '../utils.js';
 
 registerGroup({
   name: 'coupons',
@@ -121,9 +121,9 @@ registerGroup({
         },
         required: ['code'],
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(
             z.object({
               code: z.string().min(1),
@@ -151,8 +151,7 @@ registerGroup({
           const client = getClient();
           const { data } = await client.post('coupons', v);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        });
-      },
+        }),
     },
     {
       name: 'coupons_update',
@@ -211,9 +210,9 @@ registerGroup({
         },
         required: ['id'],
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(
             z.object({
               id: z.number().int().positive(),
@@ -243,8 +242,7 @@ registerGroup({
           const { id, ...data } = v;
           const { data: result } = await client.put(`coupons/${id}`, data);
           return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
-        });
-      },
+        }),
     },
     {
       name: 'coupons_delete',
@@ -257,9 +255,9 @@ registerGroup({
         },
         required: ['id'],
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(
             z.object({
               id: z.number().int().positive(),
@@ -272,8 +270,7 @@ registerGroup({
           if (v.force !== undefined) params.force = v.force;
           const { data } = await client.delete(`coupons/${v.id}`, params);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        });
-      },
+        }),
     },
     {
       name: 'coupons_batch',
@@ -298,9 +295,9 @@ registerGroup({
           },
         },
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(
             z.object({
               create: z.array(z.object({}).passthrough()).optional(),
@@ -312,8 +309,7 @@ registerGroup({
           const client = getClient();
           const { data } = await client.post('coupons/batch', v);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        });
-      },
+        }),
     },
   ],
 });

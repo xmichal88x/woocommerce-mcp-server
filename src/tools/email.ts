@@ -2,8 +2,7 @@ import nodemailer from 'nodemailer';
 import type { Transporter } from 'nodemailer';
 import { z } from 'zod';
 import { registerGroup } from '../groups.js';
-import { isReadOnly } from '../client.js';
-import { readOnlyError, validateArgs, withErrorHandling } from '../utils.js';
+import { validateArgs, withErrorHandling, assertWriteAccess } from '../utils.js';
 
 let transporter: Transporter | null = null;
 let lastFailedAt: number | null = null;
@@ -66,9 +65,9 @@ registerGroup({
         },
         required: ['to', 'subject', 'body'],
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(
             z.object({
               to: z.string().min(1),
@@ -121,8 +120,7 @@ registerGroup({
               },
             ],
           };
-        });
-      },
+        }),
     },
   ],
 });

@@ -16,6 +16,13 @@ const HTTP_ERROR_MAP: Record<number, string> = {
   503: 'Service unavailable. The store might be in maintenance mode.',
 };
 
+export class ReadOnlyError extends Error {
+  constructor() {
+    super('Server is in read-only mode. This operation is not allowed.');
+    this.name = 'ReadOnlyError';
+  }
+}
+
 export function safeError(error: unknown): SafeError {
   if (error instanceof ZodError) {
     return {
@@ -25,13 +32,16 @@ export function safeError(error: unknown): SafeError {
     };
   }
 
+  if (error instanceof ReadOnlyError) {
+    return { code: 'READ_ONLY', message: error.message, actionable: false };
+  }
+
   if (error instanceof Error) {
-    const errResponse = error as unknown as Record<string, unknown>;
     const response =
       'response' in error &&
-      errResponse.response !== null &&
-      typeof errResponse.response === 'object'
-        ? (errResponse.response as { status?: number })
+      (error as Record<string, unknown>).response !== null &&
+      typeof (error as Record<string, unknown>).response === 'object'
+        ? ((error as Record<string, unknown>).response as { status?: number })
         : undefined;
     const status = response?.status;
 

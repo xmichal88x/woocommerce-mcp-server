@@ -1,8 +1,7 @@
 import { z } from 'zod';
 import { registerGroup } from '../groups.js';
-import { isReadOnly } from '../client.js';
 import { pluginGet, pluginPost, pluginPut, pluginDelete } from '../plugin-client.js';
-import { readOnlyError, validateArgs, withErrorHandling } from '../utils.js';
+import { validateArgs, withErrorHandling, assertWriteAccess } from '../utils.js';
 
 registerGroup({
   name: 'panel',
@@ -62,9 +61,9 @@ registerGroup({
         },
         required: ['id', 'is_best'],
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(
             z.object({
               id: z.number().int().positive(),
@@ -74,8 +73,7 @@ registerGroup({
           );
           const data = await pluginPost(`answers/${v.id}/best`, { is_best: v.is_best });
           return { content: [{ type: 'text', text: JSON.stringify(data.data, null, 2) }] };
-        });
-      },
+        }),
     },
     {
       name: 'faq_list',
@@ -198,9 +196,9 @@ registerGroup({
         },
         required: ['id', 'status'],
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(
             z.object({
               id: z.number().int().positive(),
@@ -212,8 +210,7 @@ registerGroup({
             status: v.status,
           });
           return { content: [{ type: 'text', text: JSON.stringify(data.data, null, 2) }] };
-        });
-      },
+        }),
     },
     {
       name: 'admin_questions_list',
@@ -259,9 +256,9 @@ registerGroup({
         },
         required: ['id', 'content'],
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(
             z.object({
               id: z.number().int().positive(),
@@ -273,8 +270,7 @@ registerGroup({
             content: v.content,
           });
           return { content: [{ type: 'text', text: JSON.stringify(data.data, null, 2) }] };
-        });
-      },
+        }),
     },
     {
       name: 'admin_faq_create',
@@ -290,9 +286,9 @@ registerGroup({
         },
         required: ['question', 'answer'],
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(
             z.object({
               question: z.string().min(1),
@@ -305,8 +301,7 @@ registerGroup({
           );
           const data = await pluginPost('admin/faq', v);
           return { content: [{ type: 'text', text: JSON.stringify(data.data, null, 2) }] };
-        });
-      },
+        }),
     },
     {
       name: 'admin_faq_update',
@@ -323,9 +318,9 @@ registerGroup({
         },
         required: ['id'],
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(
             z.object({
               id: z.number().int().positive(),
@@ -340,8 +335,7 @@ registerGroup({
           const { id, ...body } = v;
           const data = await pluginPut(`admin/faq/${id}`, body);
           return { content: [{ type: 'text', text: JSON.stringify(data.data, null, 2) }] };
-        });
-      },
+        }),
     },
     {
       name: 'admin_faq_delete',
@@ -353,9 +347,9 @@ registerGroup({
         },
         required: ['id'],
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(
             z.object({
               id: z.number().int().positive(),
@@ -364,8 +358,7 @@ registerGroup({
           );
           const data = await pluginDelete(`admin/faq/${v.id}`);
           return { content: [{ type: 'text', text: JSON.stringify(data.data, null, 2) }] };
-        });
-      },
+        }),
     },
     {
       name: 'admin_popularity_settings_get',
@@ -392,9 +385,9 @@ registerGroup({
           cache_ttl: { type: 'integer', description: 'Cache TTL in minutes (0-1440)' },
         },
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(
             z.object({
               sales_weight: z.number().min(0).max(10).optional(),
@@ -406,8 +399,7 @@ registerGroup({
           );
           const data = await pluginPut('admin/popularity-settings', v);
           return { content: [{ type: 'text', text: JSON.stringify(data.data, null, 2) }] };
-        });
-      },
+        }),
     },
   ],
 });

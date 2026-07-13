@@ -1,9 +1,9 @@
 import { z } from 'zod';
 import { registerGroup } from '../groups.js';
-import { getClient, isReadOnly } from '../client.js';
+import { getClient } from '../client.js';
 
 import { extractPagination } from '../types.js';
-import { readOnlyError, validateArgs, withErrorHandling } from '../utils.js';
+import { validateArgs, withErrorHandling, assertWriteAccess } from '../utils.js';
 
 registerGroup({
   name: 'taxes',
@@ -35,15 +35,14 @@ registerGroup({
         },
         required: ['name'],
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(z.object({ name: z.string().min(1) }), args);
           const client = getClient();
           const { data } = await client.post('taxes/classes', v);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        });
-      },
+        }),
     },
     {
       name: 'taxes_classes_delete',
@@ -55,15 +54,14 @@ registerGroup({
         },
         required: ['slug'],
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(z.object({ slug: z.string().min(1) }), args);
           const client = getClient();
           const { data } = await client.delete(`taxes/classes/${v.slug}`, {});
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        });
-      },
+        }),
     },
 
     // ── Tax Rates ──
@@ -149,9 +147,9 @@ registerGroup({
         },
         required: ['country', 'rate', 'name'],
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(
             z.object({
               country: z.string().min(1),
@@ -172,8 +170,7 @@ registerGroup({
           const client = getClient();
           const { data } = await client.post('taxes/rates', v);
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        });
-      },
+        }),
     },
     {
       name: 'taxes_rates_update',
@@ -197,9 +194,9 @@ registerGroup({
         },
         required: ['id'],
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(
             z.object({
               id: z.number().int().positive(),
@@ -222,8 +219,7 @@ registerGroup({
           const { id, ...data } = v;
           const { data: result } = await client.put(`taxes/rates/${id}`, data);
           return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
-        });
-      },
+        }),
     },
     {
       name: 'taxes_rates_delete',
@@ -235,15 +231,14 @@ registerGroup({
         },
         required: ['id'],
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(z.object({ id: z.number().int().positive() }), args);
           const client = getClient();
           const { data } = await client.delete(`taxes/rates/${v.id}`, {});
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-        });
-      },
+        }),
     },
   ],
 });

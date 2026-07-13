@@ -196,17 +196,32 @@ Dodać warning w `registerGroup()` gdy nazwa toola już istnieje w registry.
 
 ## X4 — readOnlyError vs withErrorHandling — niespójna ścieżka błędu
 
-**Status:** pending
+**Status:** completed
 **Priority:** low
 
 ### Opis
 
-`readOnlyError()` zwraca early return przed `withErrorHandling`, przez co format odpowiedzi błędu różni się w zależności od ścieżki (read-only vs inny błąd). Sugerowane: rzucać specjalny błąd wewnątrz `withErrorHandling`.
+Zastosowano podejście **A-light**: dodano `ReadOnlyError extends Error` w `errors.ts`, obsługę w `safeError()` (przed generycznym `Error`), `assertWriteAccess()` w `utils.ts` (rzuca `ReadOnlyError` wewnątrz callbacka `withErrorHandling`). Usunięto `readOnlyError()` z `utils.ts`. Zaktualizowano ~58 handlerów w 9 plikach.
 
 ### Pliki
 
+- `src/errors.ts` (nowa klasa `ReadOnlyError`)
+- `src/utils.ts` (nowa `assertWriteAccess()`, usunięto `readOnlyError()`)
+- `src/tools/products.ts`
+- `src/tools/orders.ts`
+- `src/tools/customers.ts`
+- `src/tools/coupons.ts`
+- `src/tools/shipping.ts`
+- `src/tools/taxes.ts`
 - `src/tools/panel.ts`
-- `src/utils.ts`
+- `src/tools/media.ts`
+- `src/tools/email.ts`
+
+### Verification
+
+- `npm run lint` ✅
+- `npm run type-check` ✅
+- `npm test` — 51/51 passed ✅
 
 ---
 
@@ -269,3 +284,33 @@ Zarówno `WooCommerceClient` (client.ts) jak i `PluginResponse` (plugin-client.t
 ### Pliki
 
 - `src/config.ts`
+
+---
+
+## X9 — taxes_rates_list nie używa makeListHandler
+
+**Status:** pending
+**Priority:** low
+
+### Opis
+
+`src/tools/taxes.ts:81-109` — `taxes_rates_list` używa raw `withErrorHandling` + manual pagination zamiast współdzielonego `makeListHandler`. Niespójne z innymi list handlerami.
+
+### Pliki
+
+- `src/tools/taxes.ts`
+
+---
+
+## X10 — email.ts SMTP check bypassuje error handling pattern
+
+**Status:** pending
+**Priority:** low
+
+### Opis
+
+`src/tools/email.ts:82-99` — `smtpConfigured()` zwraca `isError: true` content bezpośrednio wewnątrz callbacka `withErrorHandling` zamiast throw. Działa ale jest niespójne architektonicznie.
+
+### Pliki
+
+- `src/tools/email.ts`

@@ -2,8 +2,7 @@ import { z } from 'zod';
 import { isIPv4 } from 'net';
 import { getWpClient } from '../plugin-client.js';
 import { registerGroup } from '../groups.js';
-import { isReadOnly } from '../client.js';
-import { readOnlyError, validateArgs, withErrorHandling } from '../utils.js';
+import { validateArgs, withErrorHandling, assertWriteAccess } from '../utils.js';
 
 registerGroup({
   name: 'media',
@@ -62,9 +61,9 @@ registerGroup({
         },
         required: ['source'],
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(
             z.object({
               source: z.string().url(),
@@ -91,12 +90,7 @@ registerGroup({
           }
 
           const lower = hostname.toLowerCase();
-          if (
-            lower === 'localhost' ||
-            lower === '127.0.0.1' ||
-            lower === '0.0.0.0' ||
-            lower === '[::1]'
-          ) {
+          if (lower === 'localhost' || lower === '::1') {
             throw new Error(`Address '${hostname}' is not allowed as image source`);
           }
 
@@ -144,8 +138,7 @@ registerGroup({
           return {
             content: [{ type: 'text', text: JSON.stringify(uploadResp.data, null, 2) }],
           };
-        });
-      },
+        }),
     },
     {
       name: 'media_delete',
@@ -158,9 +151,9 @@ registerGroup({
         },
         required: ['id'],
       },
-      handler: async (args) => {
-        if (isReadOnly()) return readOnlyError();
-        return withErrorHandling(async () => {
+      handler: async (args) =>
+        withErrorHandling(async () => {
+          assertWriteAccess();
           const v = validateArgs(
             z.object({ id: z.number().int().positive(), force: z.boolean().optional() }),
             args,
@@ -172,8 +165,7 @@ registerGroup({
           return {
             content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }],
           };
-        });
-      },
+        }),
     },
   ],
 });
