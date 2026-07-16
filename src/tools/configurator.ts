@@ -181,7 +181,10 @@ registerGroup({
               .object({
                 id: z.number().int().positive(),
                 frontend_name: z.string().optional(),
-                price_per_m2: z.string().optional(),
+                price_per_m2: z
+                  .string()
+                  .regex(/^\d+([.,]\d{1,2})?$/)
+                  .optional(),
                 configurator_params: z
                   .array(
                     z.object({
