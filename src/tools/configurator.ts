@@ -255,11 +255,15 @@ registerGroup({
             if (needsEdgeOptions) {
               const edgeTypeIdx = mergedParams.findIndex((p) => p.id === 'edge_type');
               if (edgeTypeIdx !== -1 && !mergedParams[edgeTypeIdx].options) {
-                const edgeData = await pluginGet('edge-types');
-                const edgeTypes = (edgeData.data ?? {}) as Record<string, string>;
-                mergedParams[edgeTypeIdx].options = Object.entries(edgeTypes).map(
-                  ([key, label]) => `${key} - ${label}`,
-                );
+                try {
+                  const edgeData = await pluginGet('edge-types');
+                  const edgeTypes = (edgeData.data ?? {}) as Record<string, string>;
+                  mergedParams[edgeTypeIdx].options = Object.entries(edgeTypes).map(
+                    ([key, label]) => `${key} - ${label}`,
+                  );
+                } catch {
+                  // Plugin endpoint not available yet — skip auto-population
+                }
               }
             }
 
