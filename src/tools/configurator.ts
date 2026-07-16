@@ -174,6 +174,16 @@ registerGroup({
             type: 'string',
             description: 'SVG/HTML displayed in the product description (decorative mascot)',
           },
+          pricing_mode: {
+            type: 'string',
+            enum: ['standard', 'groove'],
+            description:
+              'Pricing mode: standard (price per m2) or groove (dynamic with machining cost)',
+          },
+          material: {
+            type: 'string',
+            description: 'Product material category (e.g. MDF, Oak, Beech)',
+          },
         },
         required: ['id'],
       },
@@ -218,6 +228,8 @@ registerGroup({
                 default_tool_id: z.string().optional(),
                 available_tools: z.array(z.string()).optional(),
                 description_svg: z.string().optional(),
+                pricing_mode: z.enum(['standard', 'groove']).optional(),
+                material: z.string().max(100).optional(),
               })
               .strict(),
             args,
@@ -237,8 +249,7 @@ registerGroup({
             const existingRaw =
               (
                 (existing.data as Record<string, unknown>).meta_data as
-                  | { key: string; value: unknown }[]
-                  | undefined
+                  { key: string; value: unknown }[] | undefined
               )?.find((m) => m.key === '_pcb_configurator_params')?.value ?? '[]';
             const existingParams: Record<string, unknown>[] =
               typeof existingRaw === 'string' ? JSON.parse(existingRaw) : existingRaw;
@@ -287,6 +298,9 @@ registerGroup({
             meta_data.push({ key: '_pcb_available_tools', value: v.available_tools });
           if (v.description_svg !== undefined)
             meta_data.push({ key: '_pcb_description_svg', value: v.description_svg });
+          if (v.pricing_mode !== undefined)
+            meta_data.push({ key: '_pcb_pricing_mode', value: v.pricing_mode });
+          if (v.material !== undefined) meta_data.push({ key: '_pcb_material', value: v.material });
 
           const { data } = await client.put(`products/${v.id}`, { meta_data });
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
