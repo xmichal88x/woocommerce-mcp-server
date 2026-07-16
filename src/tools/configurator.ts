@@ -254,7 +254,7 @@ registerGroup({
             );
             if (needsEdgeOptions) {
               const edgeTypeIdx = mergedParams.findIndex((p) => p.id === 'edge_type');
-              if (edgeTypeIdx !== -1 && !mergedParams[edgeTypeIdx].options) {
+              if (edgeTypeIdx !== -1) {
                 try {
                   const edgeData = await pluginGet('edge-types');
                   const edgeTypes = (edgeData.data ?? {}) as Record<string, string>;
