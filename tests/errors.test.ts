@@ -116,6 +116,18 @@ describe('safeError', () => {
     expect(result.actionable).toBe(true);
   });
 
+  it('maps product_invalid_sku to SKU_CONFLICT', () => {
+    const error = makeError('API Error', 400);
+    (error as unknown as Record<string, unknown>).response = {
+      status: 400,
+      data: { code: 'product_invalid_sku', message: 'Invalid SKU' },
+    };
+    const result = safeError(error);
+    expect(result.code).toBe('SKU_CONFLICT');
+    expect(result.message).toContain('already assigned to another product');
+    expect(result.actionable).toBe(true);
+  });
+
   it('maps unknown WooCommerce code to API_ prefix', () => {
     const error = makeError('API Error', 400);
     (error as unknown as Record<string, unknown>).response = {

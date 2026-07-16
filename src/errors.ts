@@ -22,6 +22,11 @@ const WC_ERROR_MAP: Record<string, SafeError> = {
     message: 'This SKU is already assigned to another product. Provide a unique SKU.',
     actionable: true,
   },
+  product_invalid_sku: {
+    code: 'SKU_CONFLICT',
+    message: 'This SKU is already assigned to another product. Provide a unique SKU.',
+    actionable: true,
+  },
   woocommerce_rest_product_invalid_id: {
     code: 'PRODUCT_NOT_FOUND',
     message: 'Product with the specified ID does not exist.',
@@ -92,7 +97,8 @@ export function safeError(error: unknown): SafeError {
     // Próba ekstrakcji WooCommerce error code z response.data
     if (response !== undefined) {
       const errorData = (error as unknown as Record<string, unknown>).response as
-        { data?: { code?: unknown } } | undefined;
+        | { data?: { code?: unknown } }
+        | undefined;
       if (
         errorData?.data !== null &&
         errorData?.data !== undefined &&
