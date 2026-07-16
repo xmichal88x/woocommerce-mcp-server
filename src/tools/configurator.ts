@@ -51,6 +51,19 @@ registerGroup({
         }),
     },
     {
+      name: 'edge_types_list',
+      description: 'List all edge type profiles with labels',
+      inputSchema: {
+        type: 'object',
+        properties: {},
+      },
+      handler: async (_args) =>
+        withErrorHandling(async () => {
+          const data = await pluginGet('edge-types');
+          return { content: [{ type: 'text', text: JSON.stringify(data.data, null, 2) }] };
+        }),
+    },
+    {
       name: 'tool_lists_list',
       description: 'List named tool lists',
       inputSchema: {
@@ -79,7 +92,7 @@ registerGroup({
     {
       name: 'products_configurator_update',
       description:
-        'Update configurator parameters for a panel product. Sets frontend name, price per m2, parameter schema, default tool and available tools.',
+        'Update configurator parameters for a panel product. Sets frontend name, price per m2, parameter schema, CSV config, default tool and available tools.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -108,6 +121,10 @@ registerGroup({
                 max: { type: 'number', description: 'Maximum value (range/number)' },
                 step: { type: 'number', description: 'Step value (range)' },
                 default: { description: 'Default value' },
+                frontend_visible: {
+                  type: 'boolean',
+                  description: 'Show parameter in frontend configurator',
+                },
                 options: {
                   type: 'array',
                   items: {
@@ -121,6 +138,34 @@ registerGroup({
               required: ['id', 'label', 'type'],
             },
             description: 'Configurator parameter definitions',
+          },
+          csv_structure: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                id: {
+                  type: 'string',
+                  description: 'Column identifier (e.g. "width_mm", "height_mm", "sku")',
+                },
+                group_nested: {
+                  type: 'string',
+                  description:
+                    'Comma-separated child param IDs for container/group columns (e.g. "edge_type,groove_depth,groove_spacing")',
+                },
+              },
+              required: ['id'],
+            },
+            description:
+              'CSV column structure for production file (AlphaCAM). Simple: {"id":"width_mm"}. Container: {"id":"edge_params","group_nested":"edge_type,groove_depth"}',
+          },
+          csv_separator: {
+            type: 'string',
+            description: 'CSV separator character (e.g. ",")',
+          },
+          csv_group_separator: {
+            type: 'string',
+            description: 'CSV group separator character (e.g. ";")',
           },
           default_tool_id: { type: 'string', description: 'Default CNC tool ID' },
           available_tools: {
@@ -150,6 +195,7 @@ registerGroup({
                       max: z.number().optional(),
                       step: z.number().optional(),
                       default: z.unknown().optional(),
+                      frontend_visible: z.boolean().optional(),
                       options: z
                         .array(z.object({ value: z.unknown(), label: z.string() }))
                         .optional(),
@@ -157,6 +203,16 @@ registerGroup({
                     }),
                   )
                   .optional(),
+                csv_structure: z
+                  .array(
+                    z.object({
+                      id: z.string().min(1),
+                      group_nested: z.string().optional(),
+                    }),
+                  )
+                  .optional(),
+                csv_separator: z.string().optional(),
+                csv_group_separator: z.string().optional(),
                 default_tool_id: z.string().optional(),
                 available_tools: z.array(z.string()).optional(),
               })
@@ -192,11 +248,32 @@ registerGroup({
                 mergedParams.push(incoming);
               }
             }
+
+            const needsEdgeOptions = v.configurator_params.some(
+              (p) => p.id === 'edge_type' && p.options === undefined,
+            );
+            if (needsEdgeOptions) {
+              const edgeTypeIdx = mergedParams.findIndex((p) => p.id === 'edge_type');
+              if (edgeTypeIdx !== -1 && !mergedParams[edgeTypeIdx].options) {
+                const edgeData = await pluginGet('edge-types');
+                const edgeTypes = (edgeData.data ?? {}) as Record<string, string>;
+                mergedParams[edgeTypeIdx].options = Object.entries(edgeTypes).map(
+                  ([key, label]) => `${key} - ${label}`,
+                );
+              }
+            }
+
             meta_data.push({
               key: '_pcb_configurator_params',
               value: JSON.stringify(mergedParams),
             });
           }
+          if (v.csv_structure !== undefined)
+            meta_data.push({ key: '_pcb_csv_structure', value: v.csv_structure });
+          if (v.csv_separator !== undefined)
+            meta_data.push({ key: '_pcb_csv_separator', value: v.csv_separator });
+          if (v.csv_group_separator !== undefined)
+            meta_data.push({ key: '_pcb_csv_group_separator', value: v.csv_group_separator });
           if (v.default_tool_id !== undefined)
             meta_data.push({ key: '_pcb_default_tool_id', value: v.default_tool_id });
           if (v.available_tools !== undefined)
