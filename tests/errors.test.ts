@@ -116,14 +116,14 @@ describe('safeError', () => {
     expect(result.actionable).toBe(true);
   });
 
-  it('maps unknown WooCommerce code to WC_ prefix', () => {
+  it('maps unknown WooCommerce code to API_ prefix', () => {
     const error = makeError('API Error', 400);
     (error as unknown as Record<string, unknown>).response = {
       status: 400,
       data: { code: 'woocommerce_rest_unknown_error', message: 'Some error' },
     };
     const result = safeError(error);
-    expect(result.code).toBe('WC_woocommerce_rest_unknown_error');
+    expect(result.code).toBe('API_woocommerce_rest_unknown_error');
     expect(result.message).not.toContain('Some error');
   });
 

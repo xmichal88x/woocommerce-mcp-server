@@ -104,8 +104,8 @@ export function safeError(error: unknown): SafeError {
           return { ...WC_ERROR_MAP[wcCode] };
         }
         return {
-          code: `WC_${wcCode}`,
-          message: `WooCommerce error: ${wcCode}`,
+          code: `API_${wcCode}`,
+          message: `API error: ${wcCode}`,
           actionable: status !== undefined && status < 500,
         };
       }
