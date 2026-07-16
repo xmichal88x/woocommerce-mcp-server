@@ -13,6 +13,7 @@
 ### Task 1: Init projektu
 
 **Files:**
+
 - Create: `package.json`
 - Create: `tsconfig.json`
 - Create: `.env.example`

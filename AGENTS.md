@@ -13,22 +13,26 @@ Obowiązują **globalne reguły** z `~/.config/opencode/AGENTS.md`. Główny age
 ## 2. Źródła odniesienia (kod źródłowy do analizy przed implementacją)
 
 ### techspawn/woocommerce-mcp-server
+
 - URL: https://github.com/techspawn/woocommerce-mcp-server
 - Cel: inspiracja architektury, lista tooli MCP (produkty, zamówienia, klienci, płatności)
 - Co przejąć: listę endpointów WooCommerce API, strukturę tooli, env vars
 - Co pominąć: brak walidacji (Zod), brak MCP SDK, leak sekretów w params
 
 ### @modelcontextprotocol/sdk
+
 - URL: https://github.com/modelcontextprotocol/typescript-sdk
 - Cel: oficjalne MCP SDK — Server, tool definitions, transport
 - Co przejąć: implementacja Server, McpServer, tool rejestracja
 
 ### mvanhorn/cli-printing-press
+
 - URL: https://github.com/mvanhorn/cli-printing-Press
 - Cel: generator CLI + MCP server z OpenAPI spec — koncepcja generowania MCP z istniejącej specyfikacji WooCommerce REST API
 - Co przejąć: podejście do generowania narzędzi z API, SQLite cache (warstwa offline), compound commands (stale/health/trends), compact output dla agentów
 
 ### iOSDevSK/mcp-for-woocommerce
+
 - URL: https://github.com/iOSDevSK/mcp-for-woocommerce
 - Cel: wtyczka WP jako MCP — architektura read-only, JWT auth, dual transport
 - Co przejąć: koncepcja Streamable HTTP, JWT authentication pattern
@@ -48,6 +52,7 @@ npm run type-check
 ### 4.1 Główny agent
 
 Główny agent **NIGDY** nie pisze kodu ani nie edytuje plików. Jego rola:
+
 1. **Analizuje** — rozumie zadanie, czyta kod, identyfikuje co trzeba zrobić
 2. **Dzieli** — rozbija pracę na niezależne, atomowe zadania (1 zadanie = 1 konkretna zmiana)
 3. **Zapisuje** — tworzy listę zadań przez `todowrite` (status: pending)
@@ -83,6 +88,7 @@ Stany: `pending` → `in_progress` → `completed` / `cancelled`.
 ## 6. Kaizen — Oportunistyczna Poprawa Kodu
 
 Podczas pracy zawsze wypatruj okazji do poprawy jakości kodu:
+
 - Każda znaleziona okazja → OSOBNE zadanie na `todowrite`
 - Poprawki deleguj przez `code-refactoring-refactor-clean`
 - **1 zadanie = 1 poprawka.** Nie łącz poprawy jakości z głównym zadaniem.
@@ -93,12 +99,14 @@ Podczas pracy zawsze wypatruj okazji do poprawy jakości kodu:
 Przy każdej sesji aktywuj skille pasujące do zadania:
 
 **Obowiązkowe:**
+
 - `writing-plans` — plan przed implementacją
 - `subagent-driven-development` — wykonanie przez subagentów
 - `verification-before-completion` — weryfikacja przed zakończeniem
 - `kaizen` — ciągłe ulepszanie
 
 **Opcjonalne (gdy pasują):**
+
 - `code-reviewer` — przegląd kodu
 - `debugger` / `systematic-debugging` — debugowanie
 - `dispatching-parallel-agents` — wielu subagentów równolegle dla debugowania/testów
@@ -108,6 +116,7 @@ Przy każdej sesji aktywuj skille pasujące do zadania:
 ## 8. Verification Gate
 
 Przed uznaniem zadania za zakończone:
+
 1. Uruchom linter
 2. Uruchom type checker (jeśli dostępny dla języka)
 3. Uruchom testy (jednostkowe i integracyjne)
@@ -117,6 +126,7 @@ Przed uznaniem zadania za zakończone:
 ## 9. Uwagi architektoniczne
 
 ### Bezpieczeństwo — ZASADY
+
 1. Żadne sekrety (consumer_key, consumer_secret, hasła) NIGDY nie są akceptowane w `params` JSON-RPC — tylko env vars
 2. Każdy tool wymaga walidacji inputu przez Zod
 3. `siteUrl` ograniczony do dozwolonych domen (brak SSRF)
@@ -125,15 +135,18 @@ Przed uznaniem zadania za zakończone:
 6. Wymuszony HTTPS dla WooCommerce API
 
 ### Tool design
+
 - Każdy tool ma osobny plik w `src/tools/*.ts`
 - Tool = Zod schema + handler + error handling
 - Grupowanie: products, orders, customers, coupons, shipping, taxes, reports, system, email
 
 ### Email — funkcjonalność wykraczająca poza oryginał
+
 - Wysyłanie emaili przez `wp_mail` lub SMTP
 - Osobny tool: `send_email`, `send_order_email`, `send_custom_email`
 
 ### Testy
+
 - Testy jednostkowe dla walidacji (Zod schemas)
 - Testy integracyjne z mockiem WooCommerce API (axios mock adapter)
 - Testy bezpieczeństwa: SSRF, input validation, secret leak

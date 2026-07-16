@@ -97,8 +97,7 @@ export function safeError(error: unknown): SafeError {
     // Próba ekstrakcji WooCommerce error code z response.data
     if (response !== undefined) {
       const errorData = (error as unknown as Record<string, unknown>).response as
-        | { data?: { code?: unknown } }
-        | undefined;
+        { data?: { code?: unknown } } | undefined;
       if (
         errorData?.data !== null &&
         errorData?.data !== undefined &&

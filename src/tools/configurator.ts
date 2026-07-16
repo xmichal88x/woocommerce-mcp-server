@@ -92,7 +92,7 @@ registerGroup({
     {
       name: 'products_configurator_update',
       description:
-        'Update configurator parameters for a panel product. Sets frontend name, price per m2, parameter schema, CSV config, default tool and available tools.',
+        'Update configurator parameters for a panel product. Sets frontend name, price per m2, parameter schema, CSV config, default tool, available tools and description SVG.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -170,6 +170,10 @@ registerGroup({
             items: { type: 'string' },
             description: 'Allowed tool IDs',
           },
+          description_svg: {
+            type: 'string',
+            description: 'SVG/HTML displayed in the product description (decorative mascot)',
+          },
         },
         required: ['id'],
       },
@@ -213,6 +217,7 @@ registerGroup({
                 csv_group_separator: z.string().optional(),
                 default_tool_id: z.string().optional(),
                 available_tools: z.array(z.string()).optional(),
+                description_svg: z.string().optional(),
               })
               .strict(),
             args,
@@ -232,7 +237,8 @@ registerGroup({
             const existingRaw =
               (
                 (existing.data as Record<string, unknown>).meta_data as
-                  { key: string; value: unknown }[] | undefined
+                  | { key: string; value: unknown }[]
+                  | undefined
               )?.find((m) => m.key === '_pcb_configurator_params')?.value ?? '[]';
             const existingParams: Record<string, unknown>[] =
               typeof existingRaw === 'string' ? JSON.parse(existingRaw) : existingRaw;
@@ -279,6 +285,8 @@ registerGroup({
             meta_data.push({ key: '_pcb_default_tool_id', value: v.default_tool_id });
           if (v.available_tools !== undefined)
             meta_data.push({ key: '_pcb_available_tools', value: v.available_tools });
+          if (v.description_svg !== undefined)
+            meta_data.push({ key: '_pcb_description_svg', value: v.description_svg });
 
           const { data } = await client.put(`products/${v.id}`, { meta_data });
           return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };

@@ -11,10 +11,12 @@
 ### Task 1: Create `src/tools/orders.ts`
 
 **Files:**
+
 - Create: `src/tools/orders.ts`
 - Modify: `src/index.ts` (add import)
 
 **Pattern to follow exactly (from products.ts):**
+
 - Import `registerGroup` from `../groups.js`
 - Import `getClient`, `isReadOnly` from `../client.js`
 - Import `safeError` from `../errors.js`
@@ -37,6 +39,7 @@
 11. `orders_refunds_create` — POST `orders/{id}/refunds` (params: order_id, amount, reason, line_items, refund_payment, api_refund, meta_data)
 
 **Implementation details:**
+
 - All mutation tools (create/update/delete/batch/refund) guarded by `if (isReadOnly()) return readOnlyError()`
 - All handlers wrapped in try/catch with `safeError()`
 - JSON.stringify with null, 2 indent
@@ -44,8 +47,10 @@
 - List tools use `extractPagination` for pagination info
 
 **Modify `src/index.ts`:**
+
 - Add `import './tools/orders.js';` after the products import
 
 **Verification:**
+
 1. `npx tsc --noEmit` — must exit 0
 2. `git add -A && git commit -m "feat: add order tools (CRUD, notes, refunds)"`
