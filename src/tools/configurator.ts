@@ -127,11 +127,8 @@ registerGroup({
                 },
                 options: {
                   type: 'array',
-                  items: {
-                    type: 'object',
-                    properties: { value: {}, label: { type: 'string' } },
-                  },
-                  description: 'Options (for select type)',
+                  items: { type: 'string' },
+                  description: 'Options as strings (e.g. ["1 - Z projektu", "2 - Profil 2"])',
                 },
                 unit: { type: 'string', description: 'Unit (e.g. "mm")' },
               },
@@ -196,9 +193,7 @@ registerGroup({
                       step: z.number().optional(),
                       default: z.unknown().optional(),
                       frontend_visible: z.boolean().optional(),
-                      options: z
-                        .array(z.object({ value: z.unknown(), label: z.string() }))
-                        .optional(),
+                      options: z.array(z.string()).optional(),
                       unit: z.string().optional(),
                     }),
                   )
@@ -234,8 +229,7 @@ registerGroup({
             const existingRaw =
               (
                 (existing.data as Record<string, unknown>).meta_data as
-                  | { key: string; value: unknown }[]
-                  | undefined
+                  { key: string; value: unknown }[] | undefined
               )?.find((m) => m.key === '_pcb_configurator_params')?.value ?? '[]';
             const existingParams: Record<string, unknown>[] =
               typeof existingRaw === 'string' ? JSON.parse(existingRaw) : existingRaw;

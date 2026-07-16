@@ -256,40 +256,71 @@ export const crudTools: ToolDefinition[] = [
       withErrorHandling(async () => {
         assertWriteAccess();
         const v = validateArgs(
-          z.object({
-            id: z.number().int().positive(),
-            name: z.string().min(1).optional(),
-            type: z.enum(['simple', 'grouped', 'external', 'variable']).optional(),
-            regular_price: z.string().optional(),
-            sale_price: z.string().optional(),
-            description: z.string().optional(),
-            short_description: z.string().optional(),
-            sku: z.string().optional(),
-            stock_quantity: z.number().int().optional(),
-            stock_status: z.enum(['instock', 'outofstock', 'onbackorder']).optional(),
-            categories: z.array(z.object({ id: z.number().int().positive() })).optional(),
-            tags: z.array(z.object({ id: z.number().int().positive() })).optional(),
-            images: z
-              .array(
-                z.object({
-                  src: z.string().optional(),
-                  id: z.number().int().positive().optional(),
-                }),
-              )
-              .optional(),
-            cross_sell_ids: z.array(z.number().int().positive()).optional(),
-            upsell_ids: z.array(z.number().int().positive()).optional(),
-            attributes: z.array(z.object({}).passthrough()).optional(),
-            weight: z.string().optional(),
-            dimensions: z
-              .object({
-                length: z.string().optional(),
-                width: z.string().optional(),
-                height: z.string().optional(),
-              })
-              .optional(),
-            meta_data: z.array(z.object({ key: z.string(), value: z.unknown() })).optional(),
-          }),
+          z
+            .object({
+              id: z.number().int().positive(),
+              name: z.string().min(1).optional(),
+              type: z.enum(['simple', 'grouped', 'external', 'variable']).optional(),
+              regular_price: z
+                .string()
+                .regex(/^\d+([.,]\d{1,2})?$/)
+                .optional(),
+              sale_price: z
+                .string()
+                .regex(/^\d+([.,]\d{1,2})?$/)
+                .optional(),
+              description: z.string().optional(),
+              short_description: z.string().optional(),
+              sku: z.string().optional(),
+              stock_quantity: z.number().int().optional(),
+              stock_status: z.enum(['instock', 'outofstock', 'onbackorder']).optional(),
+              categories: z.array(z.object({ id: z.number().int().positive() })).optional(),
+              tags: z.array(z.object({ id: z.number().int().positive() })).optional(),
+              images: z
+                .array(
+                  z.object({
+                    src: z.string().optional(),
+                    id: z.number().int().positive().optional(),
+                  }),
+                )
+                .optional(),
+              cross_sell_ids: z.array(z.number().int().positive()).optional(),
+              upsell_ids: z.array(z.number().int().positive()).optional(),
+              attributes: z.array(z.object({}).passthrough()).optional(),
+              weight: z.string().optional(),
+              dimensions: z
+                .object({
+                  length: z.string().optional(),
+                  width: z.string().optional(),
+                  height: z.string().optional(),
+                })
+                .optional(),
+              meta_data: z.array(z.object({ key: z.string(), value: z.unknown() })).optional(),
+            })
+            .refine(
+              (data) => {
+                if (data.sale_price === undefined || data.regular_price === undefined) return true;
+                const rp = parseFloat(data.regular_price.replace(',', '.'));
+                const sp = parseFloat(data.sale_price.replace(',', '.'));
+                if (isNaN(rp) || isNaN(sp)) return true;
+                return sp <= rp;
+              },
+              {
+                message: 'Sale price must be less than or equal to regular price',
+                path: ['sale_price'],
+              },
+            )
+            .refine(
+              (data) => {
+                if (data.stock_status !== 'outofstock') return true;
+                if (data.stock_quantity === undefined) return true;
+                return data.stock_quantity <= 0;
+              },
+              {
+                message: 'stock_status is "outofstock" but stock_quantity is positive',
+                path: ['stock_status'],
+              },
+            ),
           args,
         );
         const client = getClient();

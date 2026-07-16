@@ -310,3 +310,124 @@ describe('products tools', () => {
     expect(result.isError).toBeUndefined();
   });
 });
+
+describe('products_update validation', () => {
+  it('rejects sale_price greater than regular_price', async () => {
+    mockClient();
+    mockIsReadOnly.mockReturnValue(false);
+
+    await import('../../src/tools/products.js');
+    const { getActiveTools } = await import('../../src/groups.js');
+
+    const tool = getActiveTools().find((t) => t.name === 'products_update');
+    expect(tool).toBeDefined();
+
+    const result = await tool!.handler({ id: 1, regular_price: '100.00', sale_price: '200.00' });
+    expect(result.isError).toBe(true);
+    const content = JSON.parse(result.content[0].text);
+    expect(content.code).toBe('VALIDATION_ERROR');
+    expect(content.message).toContain('Sale price');
+  });
+
+  it('accepts sale_price less than regular_price', async () => {
+    mockClient();
+    mockIsReadOnly.mockReturnValue(false);
+
+    await import('../../src/tools/products.js');
+    const { getActiveTools } = await import('../../src/groups.js');
+
+    const tool = getActiveTools().find((t) => t.name === 'products_update');
+    expect(tool).toBeDefined();
+
+    const result = await tool!.handler({ id: 1, regular_price: '200.00', sale_price: '100.00' });
+    expect(result.isError).toBeUndefined();
+  });
+
+  it('accepts sale_price equal to regular_price', async () => {
+    mockClient();
+    mockIsReadOnly.mockReturnValue(false);
+
+    await import('../../src/tools/products.js');
+    const { getActiveTools } = await import('../../src/groups.js');
+
+    const tool = getActiveTools().find((t) => t.name === 'products_update');
+    expect(tool).toBeDefined();
+
+    const result = await tool!.handler({ id: 1, regular_price: '100.00', sale_price: '100.00' });
+    expect(result.isError).toBeUndefined();
+  });
+
+  it('rejects invalid price format with letters', async () => {
+    mockClient();
+    mockIsReadOnly.mockReturnValue(false);
+
+    await import('../../src/tools/products.js');
+    const { getActiveTools } = await import('../../src/groups.js');
+
+    const tool = getActiveTools().find((t) => t.name === 'products_update');
+    expect(tool).toBeDefined();
+
+    const result = await tool!.handler({ id: 1, regular_price: 'abc' });
+    expect(result.isError).toBe(true);
+    const content = JSON.parse(result.content[0].text);
+    expect(content.code).toBe('VALIDATION_ERROR');
+  });
+
+  it('rejects outofstock with positive quantity', async () => {
+    mockClient();
+    mockIsReadOnly.mockReturnValue(false);
+
+    await import('../../src/tools/products.js');
+    const { getActiveTools } = await import('../../src/groups.js');
+
+    const tool = getActiveTools().find((t) => t.name === 'products_update');
+    expect(tool).toBeDefined();
+
+    const result = await tool!.handler({ id: 1, stock_status: 'outofstock', stock_quantity: 5 });
+    expect(result.isError).toBe(true);
+    const content = JSON.parse(result.content[0].text);
+    expect(content.code).toBe('VALIDATION_ERROR');
+  });
+
+  it('accepts instock with zero quantity', async () => {
+    mockClient();
+    mockIsReadOnly.mockReturnValue(false);
+
+    await import('../../src/tools/products.js');
+    const { getActiveTools } = await import('../../src/groups.js');
+
+    const tool = getActiveTools().find((t) => t.name === 'products_update');
+    expect(tool).toBeDefined();
+
+    const result = await tool!.handler({ id: 1, stock_status: 'instock', stock_quantity: 0 });
+    expect(result.isError).toBeUndefined();
+  });
+
+  it('accepts outofstock when stock_quantity is undefined', async () => {
+    mockClient();
+    mockIsReadOnly.mockReturnValue(false);
+
+    await import('../../src/tools/products.js');
+    const { getActiveTools } = await import('../../src/groups.js');
+
+    const tool = getActiveTools().find((t) => t.name === 'products_update');
+    expect(tool).toBeDefined();
+
+    const result = await tool!.handler({ id: 1, stock_status: 'outofstock' });
+    expect(result.isError).toBeUndefined();
+  });
+
+  it('accepts decimal price with comma separator', async () => {
+    mockClient();
+    mockIsReadOnly.mockReturnValue(false);
+
+    await import('../../src/tools/products.js');
+    const { getActiveTools } = await import('../../src/groups.js');
+
+    const tool = getActiveTools().find((t) => t.name === 'products_update');
+    expect(tool).toBeDefined();
+
+    const result = await tool!.handler({ id: 1, regular_price: '10,50' });
+    expect(result.isError).toBeUndefined();
+  });
+});

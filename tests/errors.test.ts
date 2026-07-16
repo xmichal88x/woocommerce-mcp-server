@@ -103,4 +103,52 @@ describe('safeError', () => {
       'WooCommerce server error. The store might be experiencing issues.',
     );
   });
+
+  it('maps product-sku-already-exists to SKU_CONFLICT', () => {
+    const error = makeError('API Error', 400);
+    (error as unknown as Record<string, unknown>).response = {
+      status: 400,
+      data: { code: 'product-sku-already-exists', message: 'The SKU is already in use' },
+    };
+    const result = safeError(error);
+    expect(result.code).toBe('SKU_CONFLICT');
+    expect(result.message).toContain('already assigned to another product');
+    expect(result.actionable).toBe(true);
+  });
+
+  it('maps unknown WooCommerce code to WC_ prefix', () => {
+    const error = makeError('API Error', 400);
+    (error as unknown as Record<string, unknown>).response = {
+      status: 400,
+      data: { code: 'woocommerce_rest_unknown_error', message: 'Some error' },
+    };
+    const result = safeError(error);
+    expect(result.code).toBe('WC_woocommerce_rest_unknown_error');
+    expect(result.message).not.toContain('Some error');
+  });
+
+  it('handles null response.data gracefully', () => {
+    const error = makeError('API Error', 400);
+    (error as unknown as Record<string, unknown>).response = { status: 400, data: null };
+    const result = safeError(error);
+    expect(result.code).toBe('HTTP_400');
+  });
+
+  it('handles response.data without code field gracefully', () => {
+    const error = makeError('API Error', 400);
+    (error as unknown as Record<string, unknown>).response = { status: 400, data: {} };
+    const result = safeError(error);
+    expect(result.code).toBe('HTTP_400');
+  });
+
+  it('does not leak response.data.message via WC_ERROR_MAP', () => {
+    const secret = 'SECRET_INTERNAL_DETAILS';
+    const error = makeError('API Error', 400);
+    (error as unknown as Record<string, unknown>).response = {
+      status: 400,
+      data: { code: 'product-sku-already-exists', message: secret },
+    };
+    const result = safeError(error);
+    expect(result.message).not.toContain(secret);
+  });
 });

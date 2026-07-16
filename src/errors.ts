@@ -16,6 +16,39 @@ const HTTP_ERROR_MAP: Record<number, string> = {
   503: 'Service unavailable. The store might be in maintenance mode.',
 };
 
+const WC_ERROR_MAP: Record<string, SafeError> = {
+  'product-sku-already-exists': {
+    code: 'SKU_CONFLICT',
+    message: 'This SKU is already assigned to another product. Provide a unique SKU.',
+    actionable: true,
+  },
+  woocommerce_rest_product_invalid_id: {
+    code: 'PRODUCT_NOT_FOUND',
+    message: 'Product with the specified ID does not exist.',
+    actionable: true,
+  },
+  woocommerce_rest_cannot_change_product_type: {
+    code: 'TYPE_IMMUTABLE',
+    message: 'Product type cannot be changed after creation.',
+    actionable: false,
+  },
+  woocommerce_rest_invalid_field: {
+    code: 'INVALID_FIELD',
+    message: 'One or more product fields contain invalid values.',
+    actionable: true,
+  },
+  woocommerce_rest_product_invalid_category_id: {
+    code: 'INVALID_CATEGORY',
+    message: 'One or more category IDs do not exist.',
+    actionable: true,
+  },
+  woocommerce_rest_product_invalid_tag_id: {
+    code: 'INVALID_TAG',
+    message: 'One or more tag IDs do not exist.',
+    actionable: true,
+  },
+};
+
 export class SmtpNotConfiguredError extends Error {
   constructor() {
     super('Email not configured. Set SMTP_HOST, SMTP_USER, SMTP_PASS.');
@@ -55,6 +88,28 @@ export function safeError(error: unknown): SafeError {
         ? ((error as Record<string, unknown>).response as { status?: number })
         : undefined;
     const status = response?.status;
+
+    // Próba ekstrakcji WooCommerce error code z response.data
+    if (response !== undefined) {
+      const errorData = (error as unknown as Record<string, unknown>).response as
+        { data?: { code?: unknown } } | undefined;
+      if (
+        errorData?.data !== null &&
+        errorData?.data !== undefined &&
+        typeof errorData.data === 'object' &&
+        typeof errorData.data.code === 'string'
+      ) {
+        const wcCode = errorData.data.code;
+        if (WC_ERROR_MAP[wcCode]) {
+          return { ...WC_ERROR_MAP[wcCode] };
+        }
+        return {
+          code: `WC_${wcCode}`,
+          message: `WooCommerce error: ${wcCode}`,
+          actionable: status !== undefined && status < 500,
+        };
+      }
+    }
 
     if (status && HTTP_ERROR_MAP[status]) {
       return {
