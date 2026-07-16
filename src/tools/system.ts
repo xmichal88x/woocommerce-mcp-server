@@ -1,3 +1,6 @@
+import { readFileSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
 import { registerGroup } from '../groups.js';
 import { getClient } from '../client.js';
 
@@ -5,9 +8,40 @@ import { extractPagination } from '../types.js';
 import { z } from 'zod';
 import { validateArgs, withErrorHandling } from '../utils.js';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const pkg = JSON.parse(readFileSync(join(__dirname, '..', '..', 'package.json'), 'utf-8'));
+
 registerGroup({
   name: 'system',
   tools: [
+    {
+      name: 'server_info',
+      description: 'Get WooCommerce MCP server version info',
+      inputSchema: {
+        type: 'object',
+        properties: {},
+      },
+      handler: async (_args) =>
+        withErrorHandling(async () => {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(
+                  {
+                    name: pkg.name,
+                    version: pkg.version,
+                    description: pkg.description,
+                  },
+                  null,
+                  2,
+                ),
+              },
+            ],
+          };
+        }),
+    },
     {
       name: 'system_status',
       description: 'Get WooCommerce system status (store info, environment, database, etc.)',
