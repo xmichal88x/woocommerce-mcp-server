@@ -11,6 +11,7 @@ const lineItemSchema = z.object({
   variation_id: z.number().int().optional(),
   quantity: z.number().int().optional(),
   price: z.string().optional(),
+  meta_data: z.array(metaDataSchema).optional(),
 });
 
 const shippingLineSchema = z.object({
@@ -167,6 +168,11 @@ registerGroup({
                 variation_id: { type: 'integer' },
                 quantity: { type: 'integer' },
                 price: { type: 'string' },
+                meta_data: {
+                  type: 'array',
+                  items: { type: 'object', properties: { key: { type: 'string' }, value: {} } },
+                  description: 'Item-level meta data (e.g. _width_mm, _height_mm)',
+                },
               },
             },
             description: 'Line items',
@@ -266,6 +272,11 @@ registerGroup({
                 variation_id: { type: 'integer' },
                 quantity: { type: 'integer' },
                 price: { type: 'string' },
+                meta_data: {
+                  type: 'array',
+                  items: { type: 'object', properties: { key: { type: 'string' }, value: {} } },
+                  description: 'Item-level meta data (e.g. _width_mm, _height_mm)',
+                },
               },
             },
             description: 'Line items',
