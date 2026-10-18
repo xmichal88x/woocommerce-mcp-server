@@ -39,10 +39,10 @@ Endpoints pod `panel/v1` dla zarządzania danymi konfiguratora.
 
 ## 4. Plugin API — Produkcja
 
-| Narzędzie                   | Opis                                          |
-| --------------------------- | --------------------------------------------- |
-| `production_csv_generate`   | Generowanie pliku CSV z wymiarów do produkcji |
-| `production_csv_status_get` | Status wygenerowanego CSV dla zamówienia      |
+| Narzędzie                   | Opis                                                         |
+| --------------------------- | ------------------------------------------------------------ |
+| `production_csv_generate`   | Generowanie pliku CSV z wymiarów do produkcji                |
+| `production_csv_status_get` | Status wygenerowanego CSV (`order-csv-status?order_id={id}`) |
 
 ## 5. Plugin API — Ustawienia sklepu
 

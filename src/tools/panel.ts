@@ -130,7 +130,7 @@ registerGroup({
       handler: async (args) =>
         withErrorHandling(async () => {
           const v = validateArgs(z.object({ order_id: z.number().int().positive() }), args);
-          const data = await pluginGet(`order-csv-status/${v.order_id}`);
+          const data = await pluginGet('order-csv-status', { order_id: v.order_id });
           return { content: [{ type: 'text', text: JSON.stringify(data.data, null, 2) }] };
         }),
     },

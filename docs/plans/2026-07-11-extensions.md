@@ -277,10 +277,10 @@ Narz warnings:
 
 **2 tooli:**
 
-| Tool                        | Endpoint panel/v1                     | Metoda | Opis                  |
-| --------------------------- | ------------------------------------- | ------ | --------------------- |
-| `production_csv_generate`   | `production-csv/generate`             | POST   | Generuj CSV produkcji |
-| `production_csv_status_get` | `production-csv/status?order_id={id}` | GET    | Status CSV            |
+| Tool                        | Endpoint panel/v1                | Metoda | Opis                  |
+| --------------------------- | -------------------------------- | ------ | --------------------- |
+| `production_csv_generate`   | `production-csv/generate`        | POST   | Generuj CSV produkcji |
+| `production_csv_status_get` | `order-csv-status?order_id={id}` | GET    | Status CSV            |
 
 ### Verification
 
